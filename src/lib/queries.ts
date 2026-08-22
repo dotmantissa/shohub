@@ -1,5 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { getProject, listProjects, projectCount } from "./server";
 
 export const CATEGORIES = ["AI", "DePIN", "Gaming", "Infrastructure", "Storage", "Other"] as const;
 export type Category = (typeof CATEGORIES)[number];
@@ -7,16 +7,20 @@ export type Category = (typeof CATEGORIES)[number];
 export type Project = {
   id: string;
   created_at: string;
+  onchain_id: string;
+  owner_wallet_address: string;
   name: string;
   builder_name: string;
   description: string;
   category: Category;
   github_url: string | null;
   demo_url: string | null;
-  cover_path: string;
-  media_path: string | null;
+  cover_blob_name: string;
+  media_blob_name: string | null;
   media_kind: "video" | "pdf" | null;
   likes_count: number;
+  metadata_blob_name: string;
+  tx_hash: string;
 };
 
 export type Sort = "newest" | "most_liked";
@@ -32,35 +36,19 @@ export const projectsQueryOptions = (params: {
   queryOptions({
     queryKey: ["projects", params],
     queryFn: async (): Promise<{ items: Project[]; total: number }> => {
-      let q = supabase.from("projects").select("*", { count: "exact" });
-      if (params.category !== "All") q = q.eq("category", params.category);
-      if (params.search.trim()) {
-        const s = `%${params.search.trim()}%`;
-        q = q.or(`name.ilike.${s},builder_name.ilike.${s},description.ilike.${s}`);
-      }
-      q =
-        params.sort === "most_liked"
-          ? q.order("likes_count", { ascending: false }).order("created_at", { ascending: false })
-          : q.order("created_at", { ascending: false });
-      const from = (params.page - 1) * PAGE_SIZE;
-      const { data, error, count } = await q.range(from, from + PAGE_SIZE - 1);
-      if (error) throw error;
-      return { items: (data ?? []) as Project[], total: count ?? 0 };
+      const result = await listProjects({ data: { ...params, pageSize: PAGE_SIZE } });
+      return result as { items: Project[]; total: number };
     },
   });
-
 
 export const newestProjectsQueryOptions = () =>
   queryOptions({
     queryKey: ["projects", "newest"],
     queryFn: async (): Promise<Project[]> => {
-      const { data, error } = await supabase
-        .from("projects")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(3);
-      if (error) throw error;
-      return (data ?? []) as Project[];
+      const result = await listProjects({
+        data: { search: "", category: "All", sort: "newest", page: 1, pageSize: 3 },
+      });
+      return result.items as Project[];
     },
   });
 
@@ -68,11 +56,7 @@ export const projectCountQueryOptions = () =>
   queryOptions({
     queryKey: ["projects", "count"],
     queryFn: async (): Promise<number> => {
-      const { count, error } = await supabase
-        .from("projects")
-        .select("*", { count: "exact", head: true });
-      if (error) throw error;
-      return count ?? 0;
+      return (await projectCount()) as number;
     },
   });
 
@@ -80,8 +64,7 @@ export const projectQueryOptions = (id: string) =>
   queryOptions({
     queryKey: ["projects", id],
     queryFn: async (): Promise<Project> => {
-      const { data, error } = await supabase.from("projects").select("*").eq("id", id).maybeSingle();
-      if (error) throw error;
+      const data = await getProject({ data: { id } });
       if (!data) throw new Error("Not found");
       return data as Project;
     },

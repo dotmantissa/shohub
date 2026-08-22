@@ -2,8 +2,8 @@ import { useEffect, useState, type MouseEvent } from "react";
 import { Heart } from "lucide-react";
 import { useMutation, useQueryClient, type QueryKey } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { getVisitorId, hasLiked, markLiked, unmarkLiked } from "@/lib/likes";
+import { likeProject } from "@/lib/server";
 import { Button } from "@/components/ui/button";
 
 type MaybeProject = { id: string; likes_count: number };
@@ -17,9 +17,7 @@ function bumpLikes(data: unknown, projectId: string, delta: number): unknown {
   if (!data) return data;
   if (Array.isArray(data)) {
     return (data as MaybeProject[]).map((p) =>
-      p && p.id === projectId
-        ? { ...p, likes_count: Math.max(0, p.likes_count + delta) }
-        : p,
+      p && p.id === projectId ? { ...p, likes_count: Math.max(0, p.likes_count + delta) } : p,
     );
   }
   const one = data as MaybeProject;
@@ -53,21 +51,10 @@ export function LikeButton({
 
   const mutation = useMutation<boolean, Error, boolean, LikeMutationContext>({
     mutationFn: async (nextLiked) => {
-      const visitor_id = getVisitorId();
-      if (nextLiked) {
-        const { error } = await supabase
-          .from("project_likes")
-          .insert({ project_id: projectId, visitor_id });
-        if (error && error.code !== "23505") throw error;
-        return !error;
-      }
-      const { error } = await supabase
-        .from("project_likes")
-        .delete()
-        .eq("project_id", projectId)
-        .eq("visitor_id", visitor_id);
-      if (error) throw error;
-      return true;
+      const result = await likeProject({
+        data: { projectId, visitorId: getVisitorId() },
+      });
+      return Boolean(result.liked) === nextLiked;
     },
     onMutate: (nextLiked) => {
       const previous = qc.getQueriesData({ queryKey: ["projects"] });
@@ -94,7 +81,9 @@ export function LikeButton({
       context?.previous.forEach(([queryKey, data]) => qc.setQueryData(queryKey, data));
       setLiked(!nextLiked);
       toast.error(
-        nextLiked ? "Couldn't save your like. Please try again." : "Couldn't remove your like. Please try again.",
+        nextLiked
+          ? "Couldn't save your like. Please try again."
+          : "Couldn't remove your like. Please try again.",
       );
     },
   });
@@ -108,7 +97,7 @@ export function LikeButton({
 
   const isPending = mutation.isPending;
   const isDisabled = isPending;
-  const label = isPending ? "Saving…" : liked ? "Liked" : "Like";
+  const label = isPending ? "Saving" : liked ? "Liked" : "Like";
 
   const px = size === "sm" ? "px-2.5 py-1 text-xs" : "px-3 py-1.5 text-sm";
 
@@ -124,7 +113,7 @@ export function LikeButton({
       className={`rounded-full ring-1 transition-colors ${px} ${
         liked
           ? "border-red-200 bg-red-50 text-red-600 ring-red-200 hover:bg-red-50 hover:text-red-600"
-          : "border-border bg-white text-foreground hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+          : "border-border bg-card text-foreground hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
       } ${isPending ? "opacity-70" : ""}`}
     >
       <Heart className={`h-4 w-4 ${liked ? "fill-current" : ""}`} />

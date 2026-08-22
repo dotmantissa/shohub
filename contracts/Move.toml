@@ -1,0 +1,14 @@
+[package]
+name = "ShohubRegistry"
+version = "0.1.0"
+
+[addresses]
+shohub = "_"
+
+[dev-addresses]
+shohub = "0xCAFE"
+
+[dependencies.AptosFramework]
+git = "https://github.com/aptos-labs/aptos-framework.git"
+rev = "aptos-release-v1.39"
+subdir = "aptos-framework"

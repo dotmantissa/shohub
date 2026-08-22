@@ -14,8 +14,8 @@ export function ProjectCard({ project }: { project: Project }) {
       className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
     >
       <AssetImage
-        bucket="covers"
-        path={project.cover_path}
+        account={project.owner_wallet_address}
+        blobName={project.cover_blob_name}
         alt={project.name}
         className="aspect-[16/10] w-full"
       />

@@ -17,10 +17,10 @@ export const Route = createFileRoute("/project/$id")({
   component: ProjectDetails,
   head: ({ params }) => {
     const name = titleFromSlug(params.id);
-    const title = name ? `${name} — Shelby Showcase` : "Project — Shelby Showcase";
+    const title = name ? `${name} | Shohub` : "Project | Shohub";
     const description = name
-      ? `${name} — a builder project served via Shelby decentralized hot storage.`
-      : "A builder project served via Shelby decentralized hot storage.";
+      ? `${name}, a builder project with media served from Shelby.`
+      : "A builder project with media served from Shelby.";
     return {
       meta: [
         { title },
@@ -66,12 +66,11 @@ function ProjectDetails() {
     return (
       <div className="min-h-screen bg-background">
         <SiteHeader />
-        <div className="py-24 text-center text-sm text-muted-foreground">Loading…</div>
+        <div className="py-24 text-center text-sm text-muted-foreground">Loading project</div>
       </div>
     );
   }
   if (error || !project) throw notFound();
-
 
   return (
     <div className="min-h-screen bg-background">
@@ -85,8 +84,8 @@ function ProjectDetails() {
         </Link>
 
         <AssetImage
-          bucket="covers"
-          path={project.cover_path}
+          account={project.owner_wallet_address}
+          blobName={project.cover_blob_name}
           alt={project.name}
           className="aspect-[16/9] w-full rounded-3xl"
           showBadge
@@ -119,7 +118,7 @@ function ProjectDetails() {
               href={project.github_url}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 rounded-full border border-border bg-white px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent"
+              className="button button--quiet"
             >
               <Github className="h-4 w-4" /> GitHub
             </a>
@@ -129,14 +128,14 @@ function ProjectDetails() {
               href={project.demo_url}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+              className="button button--primary"
             >
               <ExternalLink className="h-4 w-4" /> Live demo
             </a>
           )}
         </div>
 
-        {project.media_path && project.media_kind && (
+        {project.media_blob_name && project.media_kind && (
           <section className="mt-12">
             <div className="mb-3 flex items-center justify-between">
               <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
@@ -144,7 +143,11 @@ function ProjectDetails() {
               </h2>
               <ShelbyBadge />
             </div>
-            <MediaViewer path={project.media_path} kind={project.media_kind} />
+            <MediaViewer
+              account={project.owner_wallet_address}
+              blobName={project.media_blob_name}
+              kind={project.media_kind}
+            />
           </section>
         )}
       </main>

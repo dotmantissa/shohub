@@ -1,22 +1,32 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { usePrivy } from "@privy-io/react-auth";
+import { ArrowUpRight, Check, FileUp, ImagePlus, LoaderCircle } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
-import { SiteHeader } from "@/components/SiteHeader";
-import { ShelbyBadge } from "@/components/ShelbyBadge";
-import { supabase } from "@/integrations/supabase/client";
-import { uploadAsset } from "@/lib/storage";
+
+import { useShelbyStorage } from "@/hooks/useShelby";
+import { MAX_COVER_BYTES, MAX_MEDIA_BYTES, REGISTRY_ADDRESS, isConfigured } from "@/lib/config";
+import { safeBlobName } from "@/lib/blob-names";
+import {
+  initializeRegistryPayload,
+  registerProjectPayload,
+  registryStatusPayload,
+} from "@/lib/registry";
+import { saveProject } from "@/lib/server";
+import { shelbyBlobUrl } from "@/lib/shelby";
 import { CATEGORIES, type Category } from "@/lib/queries";
 import { projectSlug } from "@/lib/slug";
-
+import { SiteHeader } from "@/components/SiteHeader";
+import { ShelbyBadge } from "@/components/ShelbyBadge";
 
 const COVER_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const MB = 1024 * 1024;
-const COVER_MAX_BYTES = 8 * MB;
-const MEDIA_MAX_BYTES = 100 * MB;
+
 const formatMB = (bytes: number) => `${Math.round(bytes / MB)} MB`;
 
-const isValidHttpUrl = (value: string) => {
+const isHttpUrl = (value: string) => {
+  if (!value) return true;
   try {
     const url = new URL(value);
     return url.protocol === "http:" || url.protocol === "https:";
@@ -28,8 +38,12 @@ const isValidHttpUrl = (value: string) => {
 export const Route = createFileRoute("/submit")({
   head: () => ({
     meta: [
-      { title: "Submit a project — Shelby Showcase" },
-      { name: "description", content: "Share your Shelby-powered project with the community." },
+      { title: "Share a project | Shohub" },
+      {
+        name: "description",
+        content:
+          "Put your Shelby project in front of people who are looking for the next good thing.",
+      },
     ],
   }),
   component: Submit,
@@ -38,191 +52,175 @@ export const Route = createFileRoute("/submit")({
 function Submit() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { authenticated, getAccessToken, login } = usePrivy();
+  const storage = useShelbyStorage();
   const [submitting, setSubmitting] = useState(false);
   const [name, setName] = useState("");
   const [builder, setBuilder] = useState("");
-  const [desc, setDesc] = useState("");
+  const [description, setDescription] = useState("");
   const [category, setCategory] = useState<Category>("AI");
-  const [github, setGithub] = useState("");
-  const [demo, setDemo] = useState("");
+  const [githubUrl, setGithubUrl] = useState("");
+  const [demoUrl, setDemoUrl] = useState("");
   const [cover, setCover] = useState<File | null>(null);
   const [media, setMedia] = useState<File | null>(null);
-  const [coverProgress, setCoverProgress] = useState<number | null>(null);
-  const [mediaProgress, setMediaProgress] = useState<number | null>(null);
+  const [coverUploaded, setCoverUploaded] = useState(false);
+  const [mediaUploaded, setMediaUploaded] = useState(false);
 
-  const submitLabel =
-    coverProgress !== null && coverProgress < 1
-      ? "Uploading cover…"
-      : media && mediaProgress !== null && mediaProgress < 1
-        ? "Uploading demo…"
-        : "Publishing…";
-
-  const handleCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] ?? null;
-    if (file && !COVER_TYPES.includes(file.type)) {
-      toast.error("Unsupported cover format. Use JPG, PNG, WEBP, or GIF.");
-      e.target.value = "";
-      setCover(null);
+  const chooseCover = (file: File | null, input: HTMLInputElement) => {
+    if (!file) return;
+    if (!COVER_TYPES.includes(file.type)) {
+      toast.error("Use a JPG, PNG, WEBP, or GIF for the cover.");
+      input.value = "";
       return;
     }
-    if (file && file.size > COVER_MAX_BYTES) {
-      toast.error(`Cover image is too large. Max size is ${formatMB(COVER_MAX_BYTES)}.`);
-      e.target.value = "";
-      setCover(null);
+    if (file.size > MAX_COVER_BYTES) {
+      toast.error(`The cover needs to be smaller than ${formatMB(MAX_COVER_BYTES)}.`);
+      input.value = "";
       return;
     }
     setCover(file);
-    setCoverProgress(null);
+    setCoverUploaded(false);
   };
 
-  const handleMediaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] ?? null;
-    if (file && !file.type.startsWith("video/") && file.type !== "application/pdf") {
-      toast.error("Unsupported demo file. Upload a video or PDF.");
-      e.target.value = "";
-      setMedia(null);
+  const chooseMedia = (file: File | null, input: HTMLInputElement) => {
+    if (!file) return;
+    if (!file.type.startsWith("video/") && file.type !== "application/pdf") {
+      toast.error("The extra file needs to be a video or a PDF.");
+      input.value = "";
       return;
     }
-    if (file && file.size > MEDIA_MAX_BYTES) {
-      toast.error(`Demo file is too large. Max size is ${formatMB(MEDIA_MAX_BYTES)}.`);
-      e.target.value = "";
-      setMedia(null);
+    if (file.size > MAX_MEDIA_BYTES) {
+      toast.error(`The extra file needs to be smaller than ${formatMB(MAX_MEDIA_BYTES)}.`);
+      input.value = "";
       return;
     }
     setMedia(file);
-    setMediaProgress(null);
+    setMediaUploaded(false);
   };
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim()) {
-      toast.error("Project name is required.");
-      return;
+  const validate = () => {
+    if (!name.trim() || name.trim().length > 96) {
+      toast.error("Give the project a name of up to 96 characters.");
+      return false;
     }
-    if (name.trim().length > 80) {
-      toast.error("Project name must be 80 characters or fewer.");
-      return;
+    if (!builder.trim() || builder.trim().length > 80) {
+      toast.error("Tell us who is building it, using up to 80 characters.");
+      return false;
     }
-    if (!builder.trim()) {
-      toast.error("Builder name is required.");
-      return;
+    if (!description.trim() || description.trim().length > 120) {
+      toast.error("Keep the description between 1 and 120 characters.");
+      return false;
     }
-    if (builder.trim().length > 60) {
-      toast.error("Builder name must be 60 characters or fewer.");
-      return;
-    }
-    if (!desc.trim()) {
-      toast.error("Description is required.");
-      return;
-    }
-    if (!CATEGORIES.includes(category)) {
-      toast.error("Please choose a category.");
-      return;
-    }
-    if (github.trim() && !isValidHttpUrl(github.trim())) {
-      toast.error("GitHub URL must be a valid http(s) link.");
-      return;
-    }
-    if (demo.trim() && !isValidHttpUrl(demo.trim())) {
-      toast.error("Demo URL must be a valid http(s) link.");
-      return;
+    if (!isHttpUrl(githubUrl.trim()) || !isHttpUrl(demoUrl.trim())) {
+      toast.error("Links need to start with http or https.");
+      return false;
     }
     if (!cover) {
-      toast.error("Please upload a cover image.");
-      return;
+      toast.error("Every project needs a cover image.");
+      return false;
     }
-    if (!COVER_TYPES.includes(cover.type)) {
-      toast.error("Unsupported cover format. Use JPG, PNG, WEBP, or GIF.");
-      return;
+    if (!isConfigured() || !REGISTRY_ADDRESS) {
+      toast.error("The Shelby registry address is not configured yet.");
+      return false;
     }
-    if (cover.size > COVER_MAX_BYTES) {
-      toast.error(`Cover image is too large. Max size is ${formatMB(COVER_MAX_BYTES)}.`);
-      return;
+    if (!authenticated) {
+      login();
+      toast.message("Sign in with email first. Your wallet stays behind the curtain.");
+      return false;
     }
-    if (media && !media.type.startsWith("video/") && media.type !== "application/pdf") {
-      toast.error("Unsupported demo file. Upload a video or PDF.");
-      return;
+    if (!storage.isReady || !storage.storageAccountAddress) {
+      toast.message("Your Shelby account is still getting ready. Try again in a moment.");
+      return false;
     }
-    if (media && media.size > MEDIA_MAX_BYTES) {
-      toast.error(`Demo file is too large. Max size is ${formatMB(MEDIA_MAX_BYTES)}.`);
-      return;
-    }
-    if (desc.length > 120) {
-      toast.error("Description must be 120 characters or fewer.");
-      return;
-    }
+    return true;
+  };
+
+  const submit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!validate() || !cover || !storage.storageAccountAddress) return;
+
     setSubmitting(true);
-    setCoverProgress(0);
-    setMediaProgress(media ? 0 : null);
+    const projectId = crypto.randomUUID();
+    const coverBlobName = safeBlobName(projectId, "cover", cover.name);
+    const mediaBlobName = media ? safeBlobName(projectId, "media", media.name) : null;
+    const metadataBlobName = safeBlobName(projectId, "metadata", "metadata.json");
+    const mediaKind = media ? (media.type.startsWith("video/") ? "video" : "pdf") : null;
+
     try {
-      let cover_path: string;
-      try {
-        ({ path: cover_path } = await uploadAsset("covers", cover, (p) =>
-          setCoverProgress(p.percent),
-        ));
-      } catch (err) {
-        console.error(err);
-        toast.error("Cover image failed to upload to Shelby.", {
-          description: "Your details are saved — press Publish project to try again.",
+      await storage.upload(cover, coverBlobName);
+      setCoverUploaded(true);
+
+      if (media && mediaBlobName) {
+        await storage.upload(media, mediaBlobName);
+        setMediaUploaded(true);
+      }
+
+      const metadata = {
+        projectId,
+        name: name.trim(),
+        builderName: builder.trim(),
+        description: description.trim(),
+        category,
+        githubUrl: githubUrl.trim() || null,
+        demoUrl: demoUrl.trim() || null,
+        coverBlobName,
+        mediaBlobName,
+        mediaKind,
+        ownerWalletAddress: storage.storageAccountAddress,
+      };
+      await storage.upload(
+        new File([JSON.stringify(metadata)], "metadata.json", { type: "application/json" }),
+        metadataBlobName,
+      );
+
+      const status = await storage.client.aptos.view({
+        payload: registryStatusPayload(REGISTRY_ADDRESS, storage.storageAccountAddress),
+      });
+      if (!status[0]) {
+        await storage.signAndSubmitTransaction({
+          data: initializeRegistryPayload(REGISTRY_ADDRESS),
         });
-        setSubmitting(false);
-        setCoverProgress(null);
-        setMediaProgress(null);
-        return;
-      }
-      setCoverProgress(1);
-      toast.success("Cover image uploaded to Shelby.");
-      let media_path: string | null = null;
-      let media_kind: "video" | "pdf" | null = null;
-      if (media) {
-        const kind: "video" | "pdf" = media.type.startsWith("video/") ? "video" : "pdf";
-        try {
-          const up = await uploadAsset("media", media, (p) => setMediaProgress(p.percent));
-          media_path = up.path;
-          media_kind = kind;
-        } catch (err) {
-          console.error(err);
-          toast.error(
-            `${kind === "video" ? "Demo video" : "PDF"} failed to upload to Shelby.`,
-            {
-              description:
-                "Your details are saved — press Publish project to retry, or choose a different file.",
-            },
-          );
-          setSubmitting(false);
-          setMediaProgress(null);
-          return;
-        }
-        setMediaProgress(1);
-        toast.success(
-          `${media_kind === "video" ? "Demo video" : "PDF"} uploaded to Shelby.`,
-        );
       }
 
-      const { data, error } = await supabase
-        .from("projects")
-        .insert({
+      const metadataUri = shelbyBlobUrl(storage.storageAccountAddress, metadataBlobName);
+      const receipt = await storage.signAndSubmitTransaction({
+        data: registerProjectPayload({
+          address: REGISTRY_ADDRESS,
+          projectId,
           name: name.trim(),
-          builder_name: builder.trim(),
-          description: desc.trim(),
           category,
-          github_url: github.trim() || null,
-          demo_url: demo.trim() || null,
-          cover_path,
-          media_path,
-          media_kind,
-        })
-        .select("id, name")
-        .single();
-      if (error) throw error;
-      toast.success("Your project assets are stored on Shelby.");
-      toast.success("Project published successfully!");
-      await queryClient.invalidateQueries({ queryKey: ["projects"] });
-      navigate({ to: "/project/$id", params: { id: projectSlug(data) } });
+          metadataUri,
+          createdAt: Math.floor(Date.now() / 1000),
+        }),
+      });
+      const accessToken = await getAccessToken();
+      if (!accessToken) throw new Error("Your email session expired. Sign in again and retry.");
 
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to publish project. Please try again.");
+      const saved = await saveProject({
+        data: {
+          accessToken,
+          onchainId: projectId,
+          ownerWalletAddress: storage.storageAccountAddress,
+          name: name.trim(),
+          builderName: builder.trim(),
+          description: description.trim(),
+          category,
+          githubUrl: githubUrl.trim() || null,
+          demoUrl: demoUrl.trim() || null,
+          coverBlobName,
+          mediaBlobName,
+          mediaKind,
+          metadataBlobName,
+          txHash: receipt.hash,
+        },
+      });
+
+      toast.success("Your project is live. The internet may now have opinions.");
+      await queryClient.invalidateQueries({ queryKey: ["projects"] });
+      navigate({ to: "/project/$id", params: { id: projectSlug(saved) } });
+    } catch (error) {
+      console.error(error);
+      toast.error(error instanceof Error ? error.message : "Shohub could not publish the project.");
     } finally {
       setSubmitting(false);
     }
@@ -231,102 +229,123 @@ function Submit() {
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
-      <main className="mx-auto max-w-2xl px-4 pb-24 pt-10 sm:px-6 sm:pt-16">
-        <h1 className="text-3xl font-bold tracking-tight">Submit your project</h1>
-        <p className="mt-2 text-muted-foreground">
-          Share what you're building. Your media is stored on Shelby.
-        </p>
+      <main className="mx-auto grid max-w-6xl gap-10 px-4 pb-24 pt-10 sm:px-6 sm:pt-16 lg:grid-cols-[0.8fr_1.2fr]">
+        <section className="self-start lg:sticky lg:top-28">
+          <p className="eyebrow">Put it on the shelf</p>
+          <h1 className="mt-4 max-w-lg text-4xl font-semibold tracking-tight sm:text-5xl">
+            Your project deserves a proper introduction.
+          </h1>
+          <p className="mt-5 max-w-md text-base leading-7 text-muted-foreground">
+            Share the thing you have been building, hiding, and occasionally explaining with your
+            hands. Shohub keeps the files on Shelby and the details searchable.
+          </p>
+          <div className="mt-8 flex items-center gap-3 text-sm text-muted-foreground">
+            <ShelbyBadge />
+            <span>Media goes straight to Shelby storage.</span>
+          </div>
+        </section>
 
-        <form onSubmit={submit} className="mt-10 space-y-6 rounded-3xl border border-border bg-card p-6 shadow-sm sm:p-8">
-          <Field label="Project name" required>
-            <input required value={name} onChange={(e) => setName(e.target.value)} className={input} />
-          </Field>
-          <Field label="Builder name" required>
-            <input required value={builder} onChange={(e) => setBuilder(e.target.value)} className={input} />
-          </Field>
-          <Field label="Description" hint={`${desc.length}/120`} required>
+        <form onSubmit={submit} className="form-panel">
+          {!authenticated && (
+            <div className="notice notice--soft">
+              <span>
+                Publishing is for email members. The wallet work happens quietly in the background.
+              </span>
+              <button type="button" className="text-link" onClick={login}>
+                Sign in
+                <ArrowUpRight className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+
+          <div className="form-grid">
+            <Field label="Project name">
+              <input
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                maxLength={96}
+              />
+            </Field>
+            <Field label="Builder name">
+              <input
+                value={builder}
+                onChange={(event) => setBuilder(event.target.value)}
+                maxLength={80}
+              />
+            </Field>
+          </div>
+
+          <Field label="One line about it" hint={`${description.length}/120`}>
             <textarea
-              required
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
               maxLength={120}
               rows={3}
-              value={desc}
-              onChange={(e) => setDesc(e.target.value)}
-              className={`${input} resize-none`}
             />
           </Field>
-          <Field label="Category" required>
+
+          <Field label="Category">
             <select
               value={category}
-              onChange={(e) => setCategory(e.target.value as Category)}
-              className={input}
+              onChange={(event) => setCategory(event.target.value as Category)}
             >
-              {CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
+              {CATEGORIES.map((item) => (
+                <option key={item} value={item}>
+                  {item}
                 </option>
               ))}
             </select>
           </Field>
-          <div className="grid gap-6 sm:grid-cols-2">
-            <Field label="GitHub URL">
+
+          <div className="form-grid">
+            <Field label="GitHub link">
               <input
                 type="url"
-                value={github}
-                onChange={(e) => setGithub(e.target.value)}
-                placeholder="https://github.com/…"
-                className={input}
+                value={githubUrl}
+                onChange={(event) => setGithubUrl(event.target.value)}
               />
             </Field>
-            <Field label="Demo URL">
+            <Field label="Live demo link">
               <input
                 type="url"
-                value={demo}
-                onChange={(e) => setDemo(e.target.value)}
-                placeholder="https://…"
-                className={input}
+                value={demoUrl}
+                onChange={(event) => setDemoUrl(event.target.value)}
               />
             </Field>
           </div>
-          <Field label="Cover image" hint={`Max ${formatMB(COVER_MAX_BYTES)}`} required>
-            <input
-              required
-              type="file"
-              accept="image/jpeg,image/png,image/webp,image/gif"
-              onChange={handleCoverChange}
-              className={fileInput}
-            />
-            <UploadProgress label="Cover" progress={coverProgress} />
-          </Field>
-          <Field label="Demo video or PDF (optional)" hint={`Max ${formatMB(MEDIA_MAX_BYTES)}`}>
-            <input
-              type="file"
-              accept="video/*,application/pdf"
-              onChange={handleMediaChange}
-              className={fileInput}
-            />
-            <UploadProgress label="Demo" progress={mediaProgress} />
-          </Field>
 
-          {coverProgress === 1 && (!media || mediaProgress === 1) && (
-            <div className="flex items-center gap-2 rounded-2xl bg-blue-50 px-4 py-3 text-sm text-blue-800">
-              <ShelbyBadge />
-              <span>Your project assets are stored on Shelby.</span>
-            </div>
-          )}
+          <div className="form-grid">
+            <UploadField
+              label="Cover image"
+              hint={`Up to ${formatMB(MAX_COVER_BYTES)}`}
+              icon={<ImagePlus className="h-5 w-5" />}
+              file={cover}
+              uploaded={coverUploaded}
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              onChange={(event) => chooseCover(event.target.files?.[0] ?? null, event.target)}
+            />
+            <UploadField
+              label="Video or PDF"
+              hint={`Optional, up to ${formatMB(MAX_MEDIA_BYTES)}`}
+              icon={<FileUp className="h-5 w-5" />}
+              file={media}
+              uploaded={mediaUploaded}
+              accept="video/*,application/pdf"
+              onChange={(event) => chooseMedia(event.target.files?.[0] ?? null, event.target)}
+            />
+          </div>
 
           <button
             type="submit"
-            disabled={submitting || !cover}
-            aria-busy={submitting}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
+            className="button button--primary button--wide"
+            disabled={submitting}
           >
-            {submitting && (
-              <span
-                aria-hidden
-                className="size-4 animate-spin rounded-full border-2 border-primary-foreground/40 border-t-primary-foreground"
-              />
+            {submitting ? (
+              <LoaderCircle className="h-4 w-4 animate-spin" />
+            ) : (
+              <Check className="h-4 w-4" />
             )}
-            {submitting ? submitLabel : "Publish project"}
+            {submitting ? "Publishing" : "Publish project"}
           </button>
         </form>
       </main>
@@ -334,58 +353,52 @@ function Submit() {
   );
 }
 
-const input =
-  "w-full rounded-xl border border-border bg-white px-3.5 py-2.5 text-sm outline-none transition-shadow focus:ring-2 focus:ring-primary/30";
-const fileInput =
-  "w-full rounded-xl border border-dashed border-border bg-white px-3.5 py-2.5 text-sm file:mr-3 file:rounded-full file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-primary-foreground";
-
 function Field({
   label,
-  children,
   hint,
-  required,
+  children,
 }: {
   label: string;
-  children: React.ReactNode;
   hint?: string;
-  required?: boolean;
+  children: React.ReactNode;
 }) {
   return (
-    <label className="block">
-      <div className="mb-1.5 flex items-baseline justify-between">
-        <span className="text-sm font-medium">
-          {label}
-          {required && <span className="ml-0.5 text-primary">*</span>}
-        </span>
-        {hint && <span className="text-xs text-muted-foreground">{hint}</span>}
-      </div>
+    <label className="field">
+      <span className="field__label">
+        {label}
+        {hint && <small>{hint}</small>}
+      </span>
       {children}
     </label>
   );
 }
 
-function UploadProgress({ label, progress }: { label: string; progress: number | null }) {
-  if (progress === null) return null;
-  const pct = Math.round(progress * 100);
-  const done = progress >= 1;
+function UploadField({
+  label,
+  hint,
+  icon,
+  file,
+  uploaded,
+  accept,
+  onChange,
+}: {
+  label: string;
+  hint: string;
+  icon: React.ReactNode;
+  file: File | null;
+  uploaded: boolean;
+  accept: string;
+  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+}) {
   return (
-    <div className="mt-2" aria-live="polite">
-      <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
-        <span>{done ? `${label} uploaded to Shelby` : `Uploading ${label.toLowerCase()}…`}</span>
-        <span className="tabular-nums">{pct}%</span>
-      </div>
-      <div
-        role="progressbar"
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-valuenow={pct}
-        className="h-1.5 w-full overflow-hidden rounded-full bg-blue-100"
-      >
-        <div
-          className="h-full rounded-full bg-primary transition-[width] duration-150 ease-out"
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-    </div>
+    <label className="upload-field">
+      <span className="upload-field__icon">{icon}</span>
+      <span className="upload-field__copy">
+        <strong>{label}</strong>
+        <small>{uploaded ? "Stored on Shelby" : file ? file.name : hint}</small>
+      </span>
+      {uploaded && <Check className="h-4 w-4 text-primary" />}
+      <input type="file" accept={accept} onChange={onChange} />
+    </label>
   );
 }

@@ -19,15 +19,15 @@ export const Route = createFileRoute("/")({
   component: Home,
   head: () => ({
     meta: [
-      { title: "Shelby Showcase — Community Projects" },
+      { title: "Shohub | Shelby projects worth seeing" },
       {
         name: "description",
-        content: "Explore projects built by the Shelby community with media powered by decentralized hot storage.",
+        content: "Explore projects built by the Shelby community, with the media kept on Shelby.",
       },
-      { property: "og:title", content: "Shelby Showcase — Community Projects" },
+      { property: "og:title", content: "Shohub | Shelby projects worth seeing" },
       {
         property: "og:description",
-        content: "Explore projects built by the Shelby community with media powered by decentralized hot storage.",
+        content: "Explore projects built by the Shelby community, with the media kept on Shelby.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -84,8 +84,8 @@ function Home() {
             Projects built on <span className="text-primary">Shelby</span>.
           </h1>
           <p className="mt-4 text-lg text-muted-foreground">
-            A showcase of what the Shelby community is building — with media powered by
-            decentralized hot storage.
+            A living shelf of what the Shelby community is building, with the good stuff stored on
+            Shelby.
           </p>
           <p className="mt-2 text-sm font-medium text-muted-foreground">
             {total} {total === 1 ? "project" : "projects"} and counting.
@@ -118,8 +118,8 @@ function Home() {
                 type="search"
                 value={search}
                 onChange={(e) => updateSearch(e.target.value)}
-                placeholder="Search projects, builders, or ideas…"
-                className="w-full rounded-full border border-border bg-white py-3 pl-11 pr-4 text-sm shadow-sm outline-none transition-shadow focus:ring-2 focus:ring-primary/30"
+                placeholder="Search projects, builders, or ideas"
+                className="search-input"
               />
             </div>
 
@@ -132,7 +132,7 @@ function Home() {
                     className={`rounded-full px-3.5 py-1.5 text-sm font-medium ring-1 transition-colors ${
                       category === c
                         ? "bg-primary text-primary-foreground ring-primary"
-                        : "bg-white text-foreground ring-border hover:bg-blue-50"
+                        : "bg-card text-foreground ring-border hover:bg-accent"
                     }`}
                   >
                     {c}
@@ -146,7 +146,7 @@ function Home() {
                 <select
                   value={sort}
                   onChange={(e) => updateSort(e.target.value as Sort)}
-                  className="rounded-full border border-border bg-white px-3.5 py-1.5 text-sm font-medium shadow-sm outline-none focus:ring-2 focus:ring-primary/30"
+                  className="select-control"
                 >
                   <option value="newest">Newest</option>
                   <option value="most_liked">Most liked</option>
@@ -156,7 +156,7 @@ function Home() {
           </div>
 
           {isLoading ? (
-            <div className="py-16 text-center text-sm text-muted-foreground">Loading…</div>
+            <div className="py-16 text-center text-sm text-muted-foreground">Loading projects</div>
           ) : projects.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-border bg-card px-6 py-16 text-center shadow-sm">
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -194,7 +194,7 @@ function Home() {
                   <button
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page === 1}
-                    className="rounded-full border border-border bg-white px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="pagination-button"
                   >
                     Previous
                   </button>
@@ -206,7 +206,7 @@ function Home() {
                       className={`min-w-9 rounded-full px-3 py-2 text-sm font-medium ring-1 transition-colors ${
                         n === page
                           ? "bg-primary text-primary-foreground ring-primary"
-                          : "bg-white text-foreground ring-border hover:bg-blue-50"
+                          : "bg-card text-foreground ring-border hover:bg-accent"
                       }`}
                     >
                       {n}
@@ -215,7 +215,7 @@ function Home() {
                   <button
                     onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
                     disabled={page === pageCount}
-                    className="rounded-full border border-border bg-white px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="pagination-button"
                   >
                     Next
                   </button>
@@ -228,12 +228,11 @@ function Home() {
               </p>
             </>
           )}
-
         </section>
       </main>
 
       <footer className="border-t border-border/60 py-8 text-center text-xs text-muted-foreground">
-        Media served via Shelby — decentralized hot storage.
+        Media served from Shelby. No dusty file cabinet required.
       </footer>
     </div>
   );

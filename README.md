@@ -1,166 +1,139 @@
-# Shelby Spotlight
+# Shohub
 
-Build a clean, modern web app called "Shelby Showcase."
+Shohub is a living directory for projects built on Shelby. Builders publish a short introduction, a cover image, and an optional demo video or PDF. Visitors can browse, search, sort, and like the projects that catch their eye.
 
-The purpose of the app is to let builders in the Shelby ecosystem easily share what they're building while demonstrating Shelby's decentralized hot storage.
+The important part is underneath the surface. Project media and metadata are uploaded to Shelby storage, while Neon keeps the searchable directory and like counts. Each published project is also registered in the Shohub Move registry on Shelbynet.
 
-The design should be minimal, fast, and mobile-friendly, with a white background, subtle blue accents, rounded cards, and plenty of spacing.
+## What is included
 
-Core Features (Keep it Simple)
+- A responsive project directory with search, category filters, newest and most liked sorting
+- Project detail pages with Shelby served cover images, videos, and PDFs
+- Email only sign in through Privy
+- Privy embedded Ethereum wallets with the wallet interface hidden from users
+- Shelby storage through the Ethereum kit and derived storage accounts
+- Abstracted wallet prompts for registry initialization and project registration
+- Neon Postgres persistence for builders, projects, and likes
+- An Aptos Move registry contract for project ownership and metadata references
+- Light and dark colour modes using Shohub's pink, white, and black palette
 
-Home Page
+Shohub does not use sample projects in the application. The home page reflects the projects that have actually been saved to the configured database.
 
-Display a grid of builder projects.
+## How publishing works
 
-Each project card contains:
+1. A builder signs in with email.
+2. Privy creates or retrieves the embedded Ethereum wallet without showing wallet management screens.
+3. Shelby derives the builder's storage account for Shohub.
+4. The cover, optional media, and JSON metadata are uploaded to Shelby.
+5. Shohub initializes the builder's registry resource when needed.
+6. The project is registered on Shelbynet.
+7. Neon stores the searchable project record and transaction hash.
 
- Project name
+The browser never asks a builder to install a wallet or copy a private key. Users approve the required transaction prompts, and the wallet work stays out of the way.
 
- Short description (maximum 120 characters)
+## Requirements
 
- Builder name
+- Node.js 20 or newer
+- pnpm
+- Aptos CLI 9.3.0 or a compatible version for the pinned Move framework
+- A Privy application configured for email login and embedded Ethereum wallets
+- A Shelby API key
+- A Neon Postgres database
+- A deployed Shohub registry module on Shelbynet
 
- Category (AI, DePIN, Gaming, Infrastructure, Storage, Other)
+## Local setup
 
- Cover image
-
- Number of likes ❤️
-
-Include a search bar at the top.
-
-Include category filters.
-
-Submit Project Page
-
-A very simple form containing:
-
- Project name
-
- Builder name
-
- Project description
-
- Category dropdown
-
- GitHub URL
-
- Demo URL
-
- Upload one cover image
-
- Upload optional demo video or PDF
-
-When media is uploaded, display a message:
-
-"Your project assets are stored on Shelby."
-
-Project Details
-
-Clicking a project opens a clean page showing:
-
-Large cover image
-
-Project description
-
-Builder
-
-GitHub button
-
-Demo button
-
-Media section
-
-Users should be able to view the uploaded image, video or PDF instantly.
-
-Likes
-
-Visitors can click ❤️ to like a project.
-
-No comments.
-
-No authentication.
-
-No profiles.
-
-Keep it lightweight.
-
-Storage Concept
-
-All uploaded media (images, videos and PDFs) should be stored using Shelby storage.
-
-The application should clearly communicate that Shelby powers media storage and retrieval.
-
-Whenever media loads successfully, show a small badge:
-
-⚡ Served via Shelby
-
-UI Style
-
-Use large rounded cards.
-
-Simple navigation.
-
-No dark mode.
-
-No animations except subtle hover effects.
-
-Use modern typography.
-
-Lots of whitespace.
-
-Fast loading.
-
-Tech Stack
-
-React
-
-Next.js
-
-Tailwind CSS
-
-Supabase for database
-
-Prepare the storage layer so it can connect to Shelby storage.
-
-Keep the code modular and easy to extend later.
-
-Nice Extras (Only if Easy)
-
-Display the total number of projects on the homepage.
-
-Display "Newest Projects."
-
-Allow sorting by:
-
- Newest
-
- Most Liked
-
-Nothing more.
-
-Overall Goal
-
-This app should feel like Product Hunt for Shelby builders, but much simpler. It should showcase projects while highlighting Shelby's strength as a decentralized hot storage layer. The MVP should be achievable in a few days using Lovable's free tier.
-
-This project was built with [Lovable](https://lovable.dev).
-
-**Live app**: https://shohub.lovable.app
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/8e4d629c-bfde-48d9-bb21-00834fda98f3).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+Install dependencies:
 
 ```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
+pnpm install
+```
+
+Create a local environment file:
+
+```sh
+cp .env.example .env
+```
+
+Set the values in `.env`:
+
+```sh
+VITE_PRIVY_APP_ID=
+PRIVY_APP_ID=
+PRIVY_APP_SECRET=
+NEON_DATABASE_URL=
+VITE_SHELBY_API_KEY=
+VITE_SHELBY_RPC_URL=https://api.shelbynet.shelby.xyz/shelby
+VITE_SHELBY_CHAIN_ID=118
+VITE_SHELBY_REGISTRY_ADDRESS=
+VITE_APP_DOMAIN=shohub.app
+```
+
+Apply the database schema to Neon:
+
+```sh
+psql "$NEON_DATABASE_URL" -f db/schema.sql
+```
+
+Start the development server:
+
+```sh
+pnpm dev
+```
+
+Then open the local URL printed by Vite.
+
+## Contract development
+
+The registry package is in `contracts`. It is pinned to the Aptos framework release that works with the repository's Aptos CLI.
+
+Run the Move tests:
+
+```sh
+pnpm contracts:test
+```
+
+Build the package:
+
+```sh
+aptos move compile --package-dir contracts
+```
+
+Deploying requires an Aptos account with Shelbynet funds. The deployment account is intentionally not stored in this repository. After deployment, set `VITE_SHELBY_REGISTRY_ADDRESS` to the published account address.
+
+## Verification
+
+Run the application checks:
+
+```sh
+pnpm type-check
+pnpm lint
+pnpm test
+pnpm build
+pnpm contracts:test
+```
+
+The contract tests cover initialization, safe reads before initialization, project registration, duplicate protection, metadata updates, metadata readback, counter views, missing projects, and input limits.
+
+## Storage notes
+
+Shohub uses Shelby blob names under:
+
+```text
+shohub/<project id>/cover.<extension>
+shohub/<project id>/media.<extension>
+shohub/<project id>/metadata.json
+```
+
+Shelby blob URLs are public read URLs on Shelbynet. The metadata JSON is the canonical on chain reference and contains the project fields needed to reconstruct the published asset set.
+
+## Repository layout
+
+```text
+contracts/              Move registry package and tests
+db/schema.sql           Neon tables, indexes, and like function
+public/logo.svg         Shohub mark and browser icon source
+src/components/         Product UI and reusable controls
+src/hooks/              Shelby and wallet hooks
+src/lib/                Server functions, Shelby helpers, auth, and payloads
+src/routes/              Home, submit, and project detail pages
 ```

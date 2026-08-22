@@ -7,11 +7,11 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { Toaster } from "sonner";
 
 import appCss from "../styles.css?url";
-import { reportLovableError } from "../lib/lovable-error-reporting";
+import { AppProviders } from "@/components/AppProviders";
 
 function NotFoundComponent() {
   return (
@@ -38,9 +38,6 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
-  useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
-  }, [error]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -78,24 +75,24 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Shelby Showcase — Projects built on Shelby" },
+      { title: "Shohub | The Shelby builder directory" },
       {
         name: "description",
         content:
-          "Discover and share projects built by the Shelby ecosystem. Media powered by Shelby decentralized hot storage.",
+          "A living shelf of builders shipping on Shelby, with every project asset stored there.",
       },
-      { property: "og:title", content: "Shelby Showcase — Projects built on Shelby" },
+      { property: "og:title", content: "Shohub | The Shelby builder directory" },
       {
         property: "og:description",
         content:
-          "Discover and share projects built by the Shelby ecosystem. Media powered by Shelby decentralized hot storage.",
+          "A living shelf of builders shipping on Shelby, with every project asset stored there.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/logo.svg", type: "image/svg+xml" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
@@ -128,10 +125,9 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   return (
-    <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+    <AppProviders queryClient={queryClient}>
       <Outlet />
       <Toaster position="top-center" richColors />
-    </QueryClientProvider>
+    </AppProviders>
   );
 }
