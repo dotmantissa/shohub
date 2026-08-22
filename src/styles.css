@@ -601,9 +601,11 @@
     display: none;
   }
 
-  .button--quiet span,
-  .header-actions .button--quiet {
+  .header-actions .button--quiet span {
     font-size: 0;
+  }
+
+  .header-actions .button--quiet {
     gap: 0;
     padding-inline: 0.7rem;
   }

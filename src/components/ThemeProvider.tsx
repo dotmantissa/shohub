@@ -1,35 +1,27 @@
-import { useLayoutEffect, useState } from "react";
+import { useCallback, useLayoutEffect, useState } from "react";
+import { applyTheme, nextTheme, resolveTheme, THEME_STORAGE_KEY } from "@/lib/theme";
 import { ThemeContext, type Theme } from "./theme-context";
 
-const getInitialTheme = (): Theme => {
-  if (typeof window === "undefined") return "light";
-  const stored = window.localStorage.getItem("shohub.theme");
-  if (stored === "dark" || stored === "light") return stored;
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-};
-
-const applyTheme = (theme: Theme) => {
-  const root = document.documentElement;
-  root.classList.toggle("dark", theme === "dark");
-  root.dataset.theme = theme;
-  root.style.colorScheme = theme;
-};
-
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>(getInitialTheme);
+  const [theme, setTheme] = useState<Theme>("light");
 
   useLayoutEffect(() => {
-    applyTheme(theme);
-  }, [theme]);
+    const initialTheme = resolveTheme(
+      window.localStorage.getItem(THEME_STORAGE_KEY),
+      window.matchMedia("(prefers-color-scheme: dark)").matches,
+    );
+    applyTheme(initialTheme);
+    setTheme(initialTheme);
+  }, []);
 
-  const toggleTheme = () => {
+  const toggleTheme = useCallback(() => {
     setTheme((current) => {
-      const next = current === "dark" ? "light" : "dark";
-      window.localStorage.setItem("shohub.theme", next);
+      const next = nextTheme(current);
+      window.localStorage.setItem(THEME_STORAGE_KEY, next);
       applyTheme(next);
       return next;
     });
-  };
+  }, []);
 
   return <ThemeContext.Provider value={{ theme, toggleTheme }}>{children}</ThemeContext.Provider>;
 }

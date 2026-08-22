@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { LogIn, LogOut, Moon, Plus, Sun } from "lucide-react";
 import { usePrivy } from "@privy-io/react-auth";
+import { useEffect, useState } from "react";
 import { projectCountQueryOptions } from "@/lib/queries";
 import { useTheme } from "./useTheme";
 import { BrandMark } from "./BrandMark";
@@ -9,6 +10,21 @@ import { BrandMark } from "./BrandMark";
 function AuthButton() {
   const { ready, authenticated, logout, login } = usePrivy();
   const { theme, toggleTheme } = useTheme();
+  const [loginRequested, setLoginRequested] = useState(false);
+
+  useEffect(() => {
+    if (!ready || !loginRequested || authenticated) return;
+    setLoginRequested(false);
+    login();
+  }, [authenticated, login, loginRequested, ready]);
+
+  const requestLogin = () => {
+    if (ready) {
+      login();
+      return;
+    }
+    setLoginRequested(true);
+  };
 
   return (
     <div className="header-actions">
@@ -21,12 +37,19 @@ function AuthButton() {
         {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
       </button>
       {!authenticated ? (
-        <button className="button button--quiet" type="button" disabled={!ready} onClick={login}>
-          <LogIn size={16} /> Sign in
+        <button
+          className="button button--quiet"
+          type="button"
+          aria-busy={loginRequested}
+          onClick={requestLogin}
+        >
+          <LogIn size={16} />
+          <span>{loginRequested ? "Opening" : "Sign in"}</span>
         </button>
       ) : (
         <button className="button button--quiet" type="button" onClick={() => void logout()}>
-          <LogOut size={16} /> Sign out
+          <LogOut size={16} />
+          <span>Sign out</span>
         </button>
       )}
     </div>
