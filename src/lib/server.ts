@@ -12,10 +12,17 @@ export type ProjectRow = {
   created_at: string;
   name: string;
   builder_name: string;
+  x_handle: string;
+  builder_role: string;
+  team_size: number;
+  location: string;
+  builder_bio: string;
   description: string;
   category: z.infer<typeof categorySchema>;
   github_url: string | null;
   demo_url: string | null;
+  website_url: string | null;
+  social_url: string | null;
   cover_blob_name: string;
   media_blob_name: string | null;
   media_kind: "video" | "pdf" | null;
@@ -49,8 +56,9 @@ export const listProjects = createServerFn({ method: "GET" })
     const category = data.category === "All" ? null : categorySchema.parse(data.category);
     const rows = rowsOf<ProjectRow>(
       await sql`
-      select id, onchain_id, created_at, name, builder_name, description, category,
-        github_url, demo_url, cover_blob_name, media_blob_name, media_kind,
+      select id, onchain_id, created_at, name, builder_name, x_handle, description, category,
+        builder_role, team_size, location, builder_bio, github_url, demo_url,
+        website_url, social_url, cover_blob_name, media_blob_name, media_kind,
         likes_count, metadata_blob_name, owner_wallet_address, tx_hash
       from projects
       where (${category}::text is null or category = ${category})
@@ -94,10 +102,17 @@ export const saveProject = createServerFn({ method: "POST" })
       ownerWalletAddress: z.string().min(1),
       name: z.string().min(1).max(96),
       builderName: z.string().min(1).max(80),
+      xHandle: z.string().regex(/^[A-Za-z0-9_]{1,15}$/),
+      builderRole: z.string().min(1).max(80),
+      teamSize: z.number().int().min(1).max(10000),
+      location: z.string().min(1).max(80),
+      builderBio: z.string().min(1).max(280),
       description: z.string().min(1).max(280),
       category: categorySchema,
       githubUrl: z.string().url().nullable(),
       demoUrl: z.string().url().nullable(),
+      websiteUrl: z.string().url().nullable(),
+      socialUrl: z.string().url().nullable(),
       coverBlobName: z.string().min(1),
       mediaBlobName: z.string().nullable(),
       mediaKind: z.enum(["video", "pdf"]).nullable(),
@@ -118,13 +133,15 @@ export const saveProject = createServerFn({ method: "POST" })
       await sql`
       insert into projects (
         onchain_id, owner_user_id, owner_wallet_address, name, builder_name,
-        description, category, github_url, demo_url, cover_blob_name,
+        x_handle, builder_role, team_size, location, builder_bio, description, category,
+        github_url, demo_url, website_url, social_url, cover_blob_name,
         media_blob_name, media_kind, metadata_blob_name, tx_hash
       ) values (
         ${data.onchainId}, ${user.id}, ${data.ownerWalletAddress}, ${data.name},
-        ${data.builderName}, ${data.description}, ${data.category}, ${data.githubUrl},
-        ${data.demoUrl}, ${data.coverBlobName}, ${data.mediaBlobName}, ${data.mediaKind},
-        ${data.metadataBlobName}, ${data.txHash}
+        ${data.builderName}, ${data.xHandle}, ${data.builderRole}, ${data.teamSize}, ${data.location},
+        ${data.builderBio}, ${data.description}, ${data.category}, ${data.githubUrl},
+        ${data.demoUrl}, ${data.websiteUrl}, ${data.socialUrl}, ${data.coverBlobName},
+        ${data.mediaBlobName}, ${data.mediaKind}, ${data.metadataBlobName}, ${data.txHash}
       )
       returning *`,
     );

@@ -19,6 +19,7 @@ import { CATEGORIES, type Category } from "@/lib/queries";
 import { projectSlug } from "@/lib/slug";
 import { SiteHeader } from "@/components/SiteHeader";
 import { ShelbyBadge } from "@/components/ShelbyBadge";
+import { isValidXHandle, normalizeXHandle } from "@/lib/x-handle";
 
 const COVER_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const MB = 1024 * 1024;
@@ -57,10 +58,17 @@ function Submit() {
   const [submitting, setSubmitting] = useState(false);
   const [name, setName] = useState("");
   const [builder, setBuilder] = useState("");
+  const [xHandle, setXHandle] = useState("");
+  const [builderRole, setBuilderRole] = useState("");
+  const [teamSize, setTeamSize] = useState("1");
+  const [location, setLocation] = useState("");
+  const [builderBio, setBuilderBio] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState<Category>("AI");
   const [githubUrl, setGithubUrl] = useState("");
   const [demoUrl, setDemoUrl] = useState("");
+  const [websiteUrl, setWebsiteUrl] = useState("");
+  const [socialUrl, setSocialUrl] = useState("");
   const [cover, setCover] = useState<File | null>(null);
   const [media, setMedia] = useState<File | null>(null);
   const [coverUploaded, setCoverUploaded] = useState(false);
@@ -107,11 +115,37 @@ function Submit() {
       toast.error("Tell us who is building it, using up to 80 characters.");
       return false;
     }
-    if (!description.trim() || description.trim().length > 120) {
-      toast.error("Keep the description between 1 and 120 characters.");
+    if (!isValidXHandle(xHandle)) {
+      toast.error("Add a valid X handle, such as @yourname.");
       return false;
     }
-    if (!isHttpUrl(githubUrl.trim()) || !isHttpUrl(demoUrl.trim())) {
+    if (!builderRole.trim() || builderRole.trim().length > 80) {
+      toast.error("Tell us what the builder or team does.");
+      return false;
+    }
+    const parsedTeamSize = Number(teamSize);
+    if (!Number.isInteger(parsedTeamSize) || parsedTeamSize < 1 || parsedTeamSize > 10000) {
+      toast.error("Add a team size between 1 and 10,000.");
+      return false;
+    }
+    if (!location.trim() || location.trim().length > 80) {
+      toast.error("Tell us where the builder or team is based.");
+      return false;
+    }
+    if (!builderBio.trim() || builderBio.trim().length > 280) {
+      toast.error("Give the builder or team a short introduction.");
+      return false;
+    }
+    if (!description.trim() || description.trim().length > 280) {
+      toast.error("Keep the project description between 1 and 280 characters.");
+      return false;
+    }
+    if (
+      !isHttpUrl(githubUrl.trim()) ||
+      !isHttpUrl(demoUrl.trim()) ||
+      !isHttpUrl(websiteUrl.trim()) ||
+      !isHttpUrl(socialUrl.trim())
+    ) {
       toast.error("Links need to start with http or https.");
       return false;
     }
@@ -145,6 +179,7 @@ function Submit() {
     const mediaBlobName = media ? safeBlobName(projectId, "media", media.name) : null;
     const metadataBlobName = safeBlobName(projectId, "metadata", "metadata.json");
     const mediaKind = media ? (media.type.startsWith("video/") ? "video" : "pdf") : null;
+    const normalizedXHandle = normalizeXHandle(xHandle);
 
     try {
       await storage.upload(cover, coverBlobName);
@@ -159,10 +194,17 @@ function Submit() {
         projectId,
         name: name.trim(),
         builderName: builder.trim(),
+        xHandle: normalizedXHandle,
+        builderRole: builderRole.trim(),
+        teamSize: Number(teamSize),
+        location: location.trim(),
+        builderBio: builderBio.trim(),
         description: description.trim(),
         category,
         githubUrl: githubUrl.trim() || null,
         demoUrl: demoUrl.trim() || null,
+        websiteUrl: websiteUrl.trim() || null,
+        socialUrl: socialUrl.trim() || null,
         coverBlobName,
         mediaBlobName,
         mediaKind,
@@ -203,10 +245,17 @@ function Submit() {
           ownerWalletAddress: storage.storageAccountAddress,
           name: name.trim(),
           builderName: builder.trim(),
+          xHandle: normalizedXHandle,
+          builderRole: builderRole.trim(),
+          teamSize: Number(teamSize),
+          location: location.trim(),
+          builderBio: builderBio.trim(),
           description: description.trim(),
           category,
           githubUrl: githubUrl.trim() || null,
           demoUrl: demoUrl.trim() || null,
+          websiteUrl: websiteUrl.trim() || null,
+          socialUrl: socialUrl.trim() || null,
           coverBlobName,
           mediaBlobName,
           mediaKind,
@@ -259,35 +308,89 @@ function Submit() {
           )}
 
           <div className="form-grid">
-            <Field label="Project name">
+            <Field label="Project name" required>
               <input
                 value={name}
                 onChange={(event) => setName(event.target.value)}
                 maxLength={96}
+                required
               />
             </Field>
-            <Field label="Builder name">
+            <Field label="Builder or team name" required>
               <input
                 value={builder}
                 onChange={(event) => setBuilder(event.target.value)}
                 maxLength={80}
+                required
+              />
+            </Field>
+            <Field label="X handle" hint="@yourname or x.com/yourname" required>
+              <input
+                value={xHandle}
+                onChange={(event) => setXHandle(event.target.value)}
+                maxLength={100}
+                placeholder="@yourname"
+                required
               />
             </Field>
           </div>
 
-          <Field label="One line about it" hint={`${description.length}/120`}>
+          <div className="form-grid">
+            <Field label="Builder role" hint="Founder, studio, research team" required>
+              <input
+                value={builderRole}
+                onChange={(event) => setBuilderRole(event.target.value)}
+                maxLength={80}
+                required
+              />
+            </Field>
+            <Field label="Team size" hint="People working on it" required>
+              <input
+                type="number"
+                min={1}
+                max={10000}
+                value={teamSize}
+                onChange={(event) => setTeamSize(event.target.value)}
+                required
+              />
+            </Field>
+          </div>
+
+          <div className="form-grid">
+            <Field label="Based in" required>
+              <input
+                value={location}
+                onChange={(event) => setLocation(event.target.value)}
+                maxLength={80}
+                placeholder="City, country, or remote"
+                required
+              />
+            </Field>
+            <Field label="Builder introduction" hint={`${builderBio.length}/280`} required>
+              <input
+                value={builderBio}
+                onChange={(event) => setBuilderBio(event.target.value)}
+                maxLength={280}
+                required
+              />
+            </Field>
+          </div>
+
+          <Field label="What are you building?" hint={`${description.length}/280`} required>
             <textarea
               value={description}
               onChange={(event) => setDescription(event.target.value)}
-              maxLength={120}
-              rows={3}
+              maxLength={280}
+              rows={4}
+              required
             />
           </Field>
 
-          <Field label="Category">
+          <Field label="Category" required>
             <select
               value={category}
               onChange={(event) => setCategory(event.target.value as Category)}
+              required
             >
               {CATEGORIES.map((item) => (
                 <option key={item} value={item}>
@@ -315,6 +418,25 @@ function Submit() {
           </div>
 
           <div className="form-grid">
+            <Field label="Website">
+              <input
+                type="url"
+                value={websiteUrl}
+                onChange={(event) => setWebsiteUrl(event.target.value)}
+                placeholder="https://"
+              />
+            </Field>
+            <Field label="Social link">
+              <input
+                type="url"
+                value={socialUrl}
+                onChange={(event) => setSocialUrl(event.target.value)}
+                placeholder="https://"
+              />
+            </Field>
+          </div>
+
+          <div className="form-grid">
             <UploadField
               label="Cover image"
               hint={`Up to ${formatMB(MAX_COVER_BYTES)}`}
@@ -322,6 +444,7 @@ function Submit() {
               file={cover}
               uploaded={coverUploaded}
               accept="image/jpeg,image/png,image/webp,image/gif"
+              required
               onChange={(event) => chooseCover(event.target.files?.[0] ?? null, event.target)}
             />
             <UploadField
@@ -356,16 +479,19 @@ function Submit() {
 function Field({
   label,
   hint,
+  required = false,
   children,
 }: {
   label: string;
   hint?: string;
+  required?: boolean;
   children: React.ReactNode;
 }) {
   return (
     <label className="field">
       <span className="field__label">
         {label}
+        {required && <small>Required</small>}
         {hint && <small>{hint}</small>}
       </span>
       {children}
@@ -380,6 +506,7 @@ function UploadField({
   file,
   uploaded,
   accept,
+  required = false,
   onChange,
 }: {
   label: string;
@@ -388,6 +515,7 @@ function UploadField({
   file: File | null;
   uploaded: boolean;
   accept: string;
+  required?: boolean;
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }) {
   return (
@@ -398,7 +526,7 @@ function UploadField({
         <small>{uploaded ? "Stored on Shelby" : file ? file.name : hint}</small>
       </span>
       {uploaded && <Check className="h-4 w-4 text-primary" />}
-      <input type="file" accept={accept} onChange={onChange} />
+      <input type="file" accept={accept} required={required} onChange={onChange} />
     </label>
   );
 }

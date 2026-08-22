@@ -4,6 +4,7 @@ import { QueryClientProvider, type QueryClient } from "@tanstack/react-query";
 import { mainnet } from "viem/chains";
 import { createShelbyClient } from "@/lib/shelby";
 import { PRIVY_APP_ID, SHELBY_CHAIN_ID } from "@/lib/config";
+import { ThemeProvider } from "./ThemeProvider";
 
 export function AppProviders({
   children,
@@ -13,27 +14,29 @@ export function AppProviders({
   queryClient: QueryClient;
 }) {
   return (
-    <PrivyProvider
-      appId={PRIVY_APP_ID}
-      config={{
-        loginMethods: ["email"],
-        embeddedWallets: {
-          ethereum: { createOnLogin: "all-users" },
-          showWalletUIs: false,
-        },
-        supportedChains: [mainnet],
-        appearance: {
-          theme: "light",
-          accentColor: "#ff037c",
-          logo: "/logo.svg",
-        },
-      }}
-    >
-      <QueryClientProvider client={queryClient}>
-        <ShelbyClientProvider client={createShelbyClient(SHELBY_CHAIN_ID)}>
-          {children}
-        </ShelbyClientProvider>
-      </QueryClientProvider>
-    </PrivyProvider>
+    <ThemeProvider>
+      <PrivyProvider
+        appId={PRIVY_APP_ID}
+        config={{
+          loginMethods: ["email"],
+          embeddedWallets: {
+            ethereum: { createOnLogin: "all-users" },
+            showWalletUIs: false,
+          },
+          supportedChains: [mainnet],
+          appearance: {
+            theme: "light",
+            accentColor: "#ff037c",
+            logo: "/logo.svg",
+          },
+        }}
+      >
+        <QueryClientProvider client={queryClient}>
+          <ShelbyClientProvider client={createShelbyClient(SHELBY_CHAIN_ID)}>
+            {children}
+          </ShelbyClientProvider>
+        </QueryClientProvider>
+      </PrivyProvider>
+    </ThemeProvider>
   );
 }

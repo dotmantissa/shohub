@@ -8,6 +8,7 @@ The important part is underneath the surface. Project media and metadata are upl
 
 - A responsive project directory with search, category filters, newest and most liked sorting
 - Project detail pages with Shelby served cover images, videos, and PDFs
+- Builder profiles with required X handles and Unavatar profile pictures
 - Email only sign in through Privy
 - Privy embedded Ethereum wallets with the wallet interface hidden from users
 - Shelby storage through the Ethereum kit and derived storage accounts
@@ -17,6 +18,8 @@ The important part is underneath the surface. Project media and metadata are upl
 - Light and dark colour modes using Shohub's pink, white, and black palette
 
 Shohub does not use sample projects in the application. The home page reflects the projects that have actually been saved to the configured database.
+
+Publishing asks for the builder or team name, X handle, role, team size, location, a short builder introduction, project description, category, and cover image. GitHub, demo, website, social links, and extra media are optional. X handles are normalized and shown as profile pictures through Unavatar on project detail pages.
 
 ## How publishing works
 
@@ -64,7 +67,7 @@ NEON_DATABASE_URL=
 VITE_SHELBY_API_KEY=
 VITE_SHELBY_RPC_URL=https://api.shelbynet.shelby.xyz/shelby
 VITE_SHELBY_CHAIN_ID=118
-VITE_SHELBY_REGISTRY_ADDRESS=
+VITE_SHELBY_REGISTRY_ADDRESS=0x995d6f9053cfa36ccbab58c567900a918a4a0b15078bed75195b24c9e43bc8e4
 VITE_APP_DOMAIN=shohub.app
 ```
 
@@ -98,7 +101,7 @@ Build the package:
 aptos move compile --package-dir contracts
 ```
 
-Deploying requires an Aptos account with Shelbynet funds. The deployment account is intentionally not stored in this repository. After deployment, set `VITE_SHELBY_REGISTRY_ADDRESS` to the published account address.
+The registry is deployed on Shelbynet at `0x995d6f9053cfa36ccbab58c567900a918a4a0b15078bed75195b24c9e43bc8e4`. The publish transaction is `0x0a6a7a35af36f913c0b3136c18756291d6299c372a1f53ecfd5d52c7a7b00272`. The deployment signer is never stored in this repository.
 
 ## Verification
 

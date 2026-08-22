@@ -2,8 +2,9 @@ import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-ro
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Copy, Github, ExternalLink } from "lucide-react";
+import { ArrowLeft, Copy, ExternalLink, Github, Globe2, MapPin, Users } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
+import { BuilderAvatar } from "@/components/BuilderAvatar";
 import { AssetImage } from "@/components/AssetImage";
 import { CategoryChip } from "@/components/CategoryChip";
 import { LikeButton } from "@/components/LikeButton";
@@ -12,6 +13,7 @@ import { ShelbyBadge } from "@/components/ShelbyBadge";
 import { Button } from "@/components/ui/button";
 import { projectQueryOptions } from "@/lib/queries";
 import { extractProjectId, projectSlug, titleFromSlug } from "@/lib/slug";
+import { xProfileUrl } from "@/lib/x-handle";
 
 export const Route = createFileRoute("/project/$id")({
   component: ProjectDetails,
@@ -98,9 +100,20 @@ function ProjectDetails() {
               <CategoryChip category={project.category} />
             </div>
             <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">{project.name}</h1>
-            <p className="mt-2 text-sm text-muted-foreground">
-              by <span className="font-medium text-foreground">{project.builder_name}</span>
-            </p>
+            <div className="mt-4 flex items-center gap-3">
+              <BuilderAvatar handle={project.x_handle} name={project.builder_name} />
+              <p className="text-sm text-muted-foreground">
+                by <span className="font-medium text-foreground">{project.builder_name}</span>
+                <a
+                  href={xProfileUrl(project.x_handle)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-1 block text-link"
+                >
+                  @{project.x_handle}
+                </a>
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <Button type="button" variant="outline" onClick={handleCopyLink}>
@@ -111,6 +124,35 @@ function ProjectDetails() {
         </div>
 
         <p className="mt-6 text-lg leading-relaxed text-foreground">{project.description}</p>
+
+        <section className="builder-profile">
+          <div className="builder-profile__heading">
+            <p className="eyebrow">Meet the builder</p>
+            <h2 className="mt-2 text-xl font-semibold">The people behind the pixels</h2>
+          </div>
+          <p className="builder-profile__bio">{project.builder_bio}</p>
+          <div className="builder-profile__facts">
+            <span>
+              <Users className="h-4 w-4" />
+              {project.team_size} {project.team_size === 1 ? "person" : "people"}
+            </span>
+            <span>
+              <MapPin className="h-4 w-4" />
+              {project.location}
+            </span>
+            <span>
+              <strong>{project.builder_role}</strong>
+            </span>
+          </div>
+          <a
+            href="https://unavatar.io"
+            target="_blank"
+            rel="noreferrer"
+            className="text-xs text-muted-foreground underline-offset-4 hover:underline"
+          >
+            Avatars provided by Unavatar
+          </a>
+        </section>
 
         <div className="mt-6 flex flex-wrap gap-3">
           {project.github_url && (
@@ -131,6 +173,26 @@ function ProjectDetails() {
               className="button button--primary"
             >
               <ExternalLink className="h-4 w-4" /> Live demo
+            </a>
+          )}
+          {project.website_url && (
+            <a
+              href={project.website_url}
+              target="_blank"
+              rel="noreferrer"
+              className="button button--quiet"
+            >
+              <Globe2 className="h-4 w-4" /> Website
+            </a>
+          )}
+          {project.social_url && (
+            <a
+              href={project.social_url}
+              target="_blank"
+              rel="noreferrer"
+              className="button button--quiet"
+            >
+              Social link
             </a>
           )}
         </div>

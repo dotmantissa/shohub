@@ -11,10 +11,17 @@ export type Project = {
   owner_wallet_address: string;
   name: string;
   builder_name: string;
+  x_handle: string;
+  builder_role: string;
+  team_size: number;
+  location: string;
+  builder_bio: string;
   description: string;
   category: Category;
   github_url: string | null;
   demo_url: string | null;
+  website_url: string | null;
+  social_url: string | null;
   cover_blob_name: string;
   media_blob_name: string | null;
   media_kind: "video" | "pdf" | null;

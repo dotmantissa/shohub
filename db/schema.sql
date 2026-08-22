@@ -16,10 +16,17 @@ create table if not exists projects (
   created_at timestamptz not null default now(),
   name text not null check (char_length(name) between 1 and 96),
   builder_name text not null check (char_length(builder_name) between 1 and 80),
+  x_handle text not null default 'shohub' check (char_length(x_handle) between 1 and 15),
+  builder_role text not null default 'Builder' check (char_length(builder_role) between 1 and 80),
+  team_size integer not null default 1 check (team_size between 1 and 10000),
+  location text not null default 'Remote' check (char_length(location) between 1 and 80),
+  builder_bio text not null default 'Building on Shelby.' check (char_length(builder_bio) between 1 and 280),
   description text not null check (char_length(description) between 1 and 280),
   category text not null check (category in ('AI', 'DePIN', 'Gaming', 'Infrastructure', 'Storage', 'Other')),
   github_url text,
   demo_url text,
+  website_url text,
+  social_url text,
   cover_blob_name text not null,
   media_blob_name text,
   media_kind text check (media_kind in ('video', 'pdf')),
@@ -27,6 +34,14 @@ create table if not exists projects (
   metadata_blob_name text not null,
   tx_hash text not null
 );
+
+alter table projects add column if not exists builder_role text not null default 'Builder';
+alter table projects add column if not exists x_handle text not null default 'shohub';
+alter table projects add column if not exists team_size integer not null default 1;
+alter table projects add column if not exists location text not null default 'Remote';
+alter table projects add column if not exists builder_bio text not null default 'Building on Shelby.';
+alter table projects add column if not exists website_url text;
+alter table projects add column if not exists social_url text;
 
 create table if not exists project_likes (
   id uuid primary key default gen_random_uuid(),

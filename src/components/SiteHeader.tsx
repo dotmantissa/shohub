@@ -2,29 +2,13 @@ import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { LogIn, LogOut, Moon, Plus, Sun } from "lucide-react";
 import { usePrivy } from "@privy-io/react-auth";
-import { useEffect, useState } from "react";
 import { projectCountQueryOptions } from "@/lib/queries";
+import { useTheme } from "./useTheme";
 import { BrandMark } from "./BrandMark";
 
 function AuthButton() {
   const { ready, authenticated, logout, login } = usePrivy();
-  const [dark, setDark] = useState(false);
-
-  useEffect(() => {
-    const stored = localStorage.getItem("shohub.theme");
-    const prefersDark = stored
-      ? stored === "dark"
-      : matchMedia("(prefers-color-scheme: dark)").matches;
-    setDark(prefersDark);
-    document.documentElement.classList.toggle("dark", prefersDark);
-  }, []);
-
-  const toggleTheme = () => {
-    const next = !dark;
-    setDark(next);
-    localStorage.setItem("shohub.theme", next ? "dark" : "light");
-    document.documentElement.classList.toggle("dark", next);
-  };
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <div className="header-actions">
@@ -34,7 +18,7 @@ function AuthButton() {
         onClick={toggleTheme}
         aria-label="Toggle colour mode"
       >
-        {dark ? <Sun size={17} /> : <Moon size={17} />}
+        {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
       </button>
       {!authenticated ? (
         <button className="button button--quiet" type="button" disabled={!ready} onClick={login}>
