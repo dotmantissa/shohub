@@ -5,6 +5,7 @@ import { mainnet } from "viem/chains";
 import { createShelbyClient } from "@/lib/shelby";
 import { PRIVY_APP_ID, SHELBY_CHAIN_ID } from "@/lib/config";
 import { ThemeProvider } from "./ThemeProvider";
+import { ShelbyAccountProvisioner } from "./ShelbyAccountProvisioner";
 
 export function AppProviders({
   children,
@@ -33,6 +34,7 @@ export function AppProviders({
       >
         <QueryClientProvider client={queryClient}>
           <ShelbyClientProvider client={createShelbyClient(SHELBY_CHAIN_ID)}>
+            <ShelbyAccountProvisioner />
             {children}
           </ShelbyClientProvider>
         </QueryClientProvider>

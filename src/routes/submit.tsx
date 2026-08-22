@@ -13,7 +13,7 @@ import {
   registerProjectPayload,
   registryStatusPayload,
 } from "@/lib/registry";
-import { saveProject } from "@/lib/server";
+import { provisionShelbyAccount, saveProject } from "@/lib/server";
 import { shelbyBlobUrl } from "@/lib/shelby";
 import { CATEGORIES, type Category } from "@/lib/queries";
 import { projectSlug } from "@/lib/slug";
@@ -149,6 +149,18 @@ function Submit() {
     const normalizedXHandle = normalizeXHandle(xHandle);
 
     try {
+      const fundingAccessToken = await getAccessToken();
+      if (!fundingAccessToken) {
+        throw new Error("Your email session expired. Sign in again and retry.");
+      }
+      await provisionShelbyAccount({
+        data: {
+          accessToken: fundingAccessToken,
+          storageAccountAddress: storage.storageAccountAddress,
+          domain: window.location.host,
+        },
+      });
+
       await storage.upload(cover, coverBlobName);
       setCoverUploaded(true);
 

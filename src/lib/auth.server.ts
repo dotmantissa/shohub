@@ -13,10 +13,27 @@ function getPrivyClient() {
 export type AuthenticatedUser = {
   id: string;
   email: string | null;
+  ethereumWalletAddresses: string[];
 };
 
 export async function verifyPrivyToken(token: string | null): Promise<AuthenticatedUser> {
   if (!token) throw new Error("Authentication required.");
-  const claims = await getPrivyClient().utils().auth().verifyAccessToken(token);
-  return { id: claims.user_id, email: null };
+  const privy = getPrivyClient();
+  const claims = await privy.utils().auth().verifyAccessToken(token);
+  const user = await privy.users()._get(claims.user_id);
+  const emailAccount = user.linked_accounts.find((account) => account.type === "email");
+  const email = emailAccount?.type === "email" ? emailAccount.address : null;
+  const ethereumWalletAddresses = user.linked_accounts.flatMap((account) =>
+    account.type === "wallet" &&
+    "chain_type" in account &&
+    "wallet_client_type" in account &&
+    account.chain_type === "ethereum" &&
+    account.wallet_client_type === "privy"
+      ? [account.address]
+      : [],
+  );
+  if (ethereumWalletAddresses.length === 0) {
+    throw new Error("Your embedded wallet is still being prepared.");
+  }
+  return { id: user.id, email, ethereumWalletAddresses };
 }

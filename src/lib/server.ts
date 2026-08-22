@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { getDatabase } from "./neon.server";
 import { verifyPrivyToken } from "./auth.server";
+import { assertStoredShelbyAccount, provisionUserShelbyAccount } from "./shelby-funding.server";
 
 const categorySchema = z.enum(["AI", "DePIN", "Gaming", "Infrastructure", "Storage", "Other"]);
 export type ProjectRow = {
@@ -94,6 +95,23 @@ export const projectCount = createServerFn({ method: "GET" }).handler(async () =
   return rows[0]?.count ?? 0;
 });
 
+export const provisionShelbyAccount = createServerFn({ method: "POST" })
+  .validator(
+    z.object({
+      accessToken: z.string().min(1),
+      storageAccountAddress: z.string().min(1),
+      domain: z.string().min(1).max(253),
+    }),
+  )
+  .handler(async ({ data }) => {
+    const user = await authUser(data.accessToken);
+    return provisionUserShelbyAccount({
+      user,
+      address: data.storageAccountAddress,
+      domain: data.domain,
+    });
+  });
+
 export const saveProject = createServerFn({ method: "POST" })
   .validator(
     z.object({
@@ -122,6 +140,7 @@ export const saveProject = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const user = await authUser(data.accessToken);
+    await assertStoredShelbyAccount(user.id, data.ownerWalletAddress);
     const sql = getDatabase();
     const email = user.email;
     await sql`

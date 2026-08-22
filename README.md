@@ -69,12 +69,27 @@ VITE_SHELBY_RPC_URL=https://api.shelbynet.shelby.xyz/shelby
 VITE_SHELBY_CHAIN_ID=118
 VITE_SHELBY_REGISTRY_ADDRESS=0x995d6f9053cfa36ccbab58c567900a918a4a0b15078bed75195b24c9e43bc8e4
 VITE_APP_DOMAIN=shohub.app
+SHELBY_DEPLOYER_PRIVATE_KEY=
+SHELBY_DEPLOYER_ADDRESS=0x995d6f9053cfa36ccbab58c567900a918a4a0b15078bed75195b24c9e43bc8e4
+SHELBY_FULLNODE_URL=https://api.shelbynet.shelby.xyz/v1
+SHELBY_ALLOWED_DOMAINS=
 ```
+
+The deployer key stays on the server. Shohub verifies the signed in Privy user, derives the
+matching Shelby account, and gives it enough APT and ShelbyUSD to publish without asking the
+builder to visit a faucet. Funding runs as soon as email sign in finishes and is checked again
+before an upload begins.
 
 Apply the database schema to Neon:
 
 ```sh
 psql "$NEON_DATABASE_URL" -f db/schema.sql
+```
+
+Fund every existing derived account after applying the schema:
+
+```sh
+pnpm fund:existing
 ```
 
 Start the development server:

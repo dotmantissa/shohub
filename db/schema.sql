@@ -8,6 +8,18 @@ create table if not exists users (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists user_shelby_accounts (
+  user_id text not null references users(id) on delete cascade,
+  domain text not null,
+  wallet_address text not null unique,
+  apt_balance bigint not null default 0,
+  shelby_usd_balance bigint not null default 0,
+  funded_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  primary key (user_id, domain)
+);
+
 create table if not exists projects (
   id uuid primary key default gen_random_uuid(),
   onchain_id text not null unique,
@@ -55,6 +67,7 @@ create index if not exists projects_created_at_idx on projects (created_at desc)
 create index if not exists projects_likes_idx on projects (likes_count desc);
 create index if not exists projects_category_idx on projects (category);
 create index if not exists projects_search_idx on projects using gin (to_tsvector('simple', name || ' ' || builder_name || ' ' || description));
+create index if not exists user_shelby_accounts_user_idx on user_shelby_accounts (user_id);
 
 create or replace function toggle_project_like(target_project uuid, target_visitor text)
 returns table (liked boolean, likes_count integer)
