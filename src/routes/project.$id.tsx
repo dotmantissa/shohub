@@ -66,7 +66,7 @@ function ProjectDetails() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="app-page min-h-screen">
         <SiteHeader />
         <div className="py-24 text-center text-sm text-muted-foreground">Loading project</div>
       </div>
@@ -75,7 +75,7 @@ function ProjectDetails() {
   if (error || !project) throw notFound();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="app-page min-h-screen">
       <SiteHeader />
       <main className="page-shell max-w-4xl pb-20 pt-8 sm:pb-24 sm:pt-12">
         <Link

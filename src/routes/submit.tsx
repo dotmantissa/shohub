@@ -243,7 +243,7 @@ function Submit() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="app-page min-h-screen">
       <SiteHeader />
       <main className="page-shell grid gap-8 pb-20 pt-9 sm:gap-10 sm:pb-24 sm:pt-14 lg:grid-cols-[0.8fr_1.2fr]">
         <section className="self-start lg:sticky lg:top-28">

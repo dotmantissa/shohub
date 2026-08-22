@@ -44,6 +44,9 @@ describe("interactive UI regressions", () => {
     const root = source("../routes/__root.tsx");
     const motion = source("../components/ShowcaseMotion.tsx");
     const styles = source("../styles.css");
+    const home = source("../routes/index.tsx");
+    const submit = source("../routes/submit.tsx");
+    const project = source("../routes/project.$id.tsx");
 
     expect(root).toContain("<ShowcaseMotion global />");
     expect(root).toContain('className="app-content"');
@@ -51,6 +54,9 @@ describe("interactive UI regressions", () => {
     expect(motion).toContain("<ShowcaseChain y={300} />");
     expect(motion).toContain("<ShowcaseChain y={600} />");
     expect(styles).toContain(".showcase-motion--global");
-    expect(styles).toContain(".app-content");
+    expect(styles).toContain(".app-page");
+    expect(home).toContain('className="app-page min-h-screen"');
+    expect(submit).toContain('className="app-page min-h-screen"');
+    expect(project).toContain('className="app-page min-h-screen"');
   });
 });

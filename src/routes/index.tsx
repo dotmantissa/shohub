@@ -75,7 +75,7 @@ function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="app-page min-h-screen">
       <SiteHeader />
 
       <main className="page-shell pb-20 pt-9 sm:pb-24 sm:pt-14">
