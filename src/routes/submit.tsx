@@ -19,22 +19,13 @@ import { CATEGORIES, type Category } from "@/lib/queries";
 import { projectSlug } from "@/lib/slug";
 import { SiteHeader } from "@/components/SiteHeader";
 import { ShelbyBadge } from "@/components/ShelbyBadge";
-import { isValidXHandle, normalizeXHandle } from "@/lib/x-handle";
+import { normalizeXHandle } from "@/lib/x-handle";
+import { submissionValidationError } from "@/lib/submission-validation";
 
 const COVER_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const MB = 1024 * 1024;
 
 const formatMB = (bytes: number) => `${Math.round(bytes / MB)} MB`;
-
-const isHttpUrl = (value: string) => {
-  if (!value) return true;
-  try {
-    const url = new URL(value);
-    return url.protocol === "http:" || url.protocol === "https:";
-  } catch {
-    return false;
-  }
-};
 
 export const Route = createFileRoute("/submit")({
   head: () => ({
@@ -107,46 +98,22 @@ function Submit() {
   };
 
   const validate = () => {
-    if (!name.trim() || name.trim().length > 96) {
-      toast.error("Give the project a name of up to 96 characters.");
-      return false;
-    }
-    if (!builder.trim() || builder.trim().length > 80) {
-      toast.error("Tell us who is building it, using up to 80 characters.");
-      return false;
-    }
-    if (!isValidXHandle(xHandle)) {
-      toast.error("Add a valid X handle, such as @yourname.");
-      return false;
-    }
-    if (!builderRole.trim() || builderRole.trim().length > 80) {
-      toast.error("Tell us what the builder or team does.");
-      return false;
-    }
-    const parsedTeamSize = Number(teamSize);
-    if (!Number.isInteger(parsedTeamSize) || parsedTeamSize < 1 || parsedTeamSize > 10000) {
-      toast.error("Add a team size between 1 and 10,000.");
-      return false;
-    }
-    if (!location.trim() || location.trim().length > 80) {
-      toast.error("Tell us where the builder or team is based.");
-      return false;
-    }
-    if (!builderBio.trim() || builderBio.trim().length > 280) {
-      toast.error("Give the builder or team a short introduction.");
-      return false;
-    }
-    if (!description.trim() || description.trim().length > 280) {
-      toast.error("Keep the project description between 1 and 280 characters.");
-      return false;
-    }
-    if (
-      !isHttpUrl(githubUrl.trim()) ||
-      !isHttpUrl(demoUrl.trim()) ||
-      !isHttpUrl(websiteUrl.trim()) ||
-      !isHttpUrl(socialUrl.trim())
-    ) {
-      toast.error("Links need to start with http or https.");
+    const error = submissionValidationError({
+      name,
+      builder,
+      xHandle,
+      builderRole,
+      teamSize,
+      location,
+      builderBio,
+      description,
+      githubUrl,
+      demoUrl,
+      websiteUrl,
+      socialUrl,
+    });
+    if (error) {
+      toast.error(error);
       return false;
     }
     if (!cover) {
@@ -307,156 +274,194 @@ function Submit() {
             </div>
           )}
 
-          <div className="form-grid">
-            <Field label="Project name" required>
-              <input
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                maxLength={96}
-                required
-              />
-            </Field>
-            <Field label="Builder or team name" required>
-              <input
-                value={builder}
-                onChange={(event) => setBuilder(event.target.value)}
-                maxLength={80}
-                required
-              />
-            </Field>
-            <Field label="X handle" hint="@yourname or x.com/yourname" required>
-              <input
-                value={xHandle}
-                onChange={(event) => setXHandle(event.target.value)}
-                maxLength={100}
-                placeholder="@yourname"
-                required
-              />
-            </Field>
-          </div>
+          <p className="form-required-note">
+            Fields marked with <strong>*</strong> are needed to put your project on the shelf.
+          </p>
 
-          <div className="form-grid">
-            <Field label="Builder role" hint="Founder, studio, research team" required>
-              <input
-                value={builderRole}
-                onChange={(event) => setBuilderRole(event.target.value)}
-                maxLength={80}
-                required
-              />
-            </Field>
-            <Field label="Team size" hint="People working on it" required>
-              <input
-                type="number"
-                min={1}
-                max={10000}
-                value={teamSize}
-                onChange={(event) => setTeamSize(event.target.value)}
-                required
-              />
-            </Field>
-          </div>
-
-          <div className="form-grid">
-            <Field label="Based in" required>
-              <input
-                value={location}
-                onChange={(event) => setLocation(event.target.value)}
-                maxLength={80}
-                placeholder="City, country, or remote"
-                required
-              />
-            </Field>
-            <Field label="Builder introduction" hint={`${builderBio.length}/280`} required>
-              <input
-                value={builderBio}
-                onChange={(event) => setBuilderBio(event.target.value)}
-                maxLength={280}
-                required
-              />
-            </Field>
-          </div>
-
-          <Field label="What are you building?" hint={`${description.length}/280`} required>
-            <textarea
-              value={description}
-              onChange={(event) => setDescription(event.target.value)}
-              maxLength={280}
-              rows={4}
-              required
-            />
-          </Field>
-
-          <Field label="Category" required>
-            <select
-              value={category}
-              onChange={(event) => setCategory(event.target.value as Category)}
+          <FormSection
+            title="Project"
+            description="Give people the quick version they need before they click in."
+          >
+            <div className="form-grid">
+              <Field label="Project name" required>
+                <input
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  maxLength={96}
+                  required
+                />
+              </Field>
+              <Field label="Category" required>
+                <select
+                  value={category}
+                  onChange={(event) => setCategory(event.target.value as Category)}
+                  required
+                >
+                  {CATEGORIES.map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            </div>
+            <Field
+              label="Project description"
+              hint="What are you making, and why should someone care?"
+              count={`${description.length}/280`}
               required
             >
-              {CATEGORIES.map((item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
-              ))}
-            </select>
-          </Field>
+              <textarea
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+                maxLength={280}
+                rows={4}
+                required
+              />
+            </Field>
+          </FormSection>
 
-          <div className="form-grid">
-            <Field label="GitHub link">
-              <input
-                type="url"
-                value={githubUrl}
-                onChange={(event) => setGithubUrl(event.target.value)}
-              />
-            </Field>
-            <Field label="Live demo link">
-              <input
-                type="url"
-                value={demoUrl}
-                onChange={(event) => setDemoUrl(event.target.value)}
-              />
-            </Field>
-          </div>
+          <FormSection
+            title="Builder"
+            description="A little context about the people behind the project makes the shelf more useful."
+          >
+            <div className="form-grid">
+              <Field label="Builder name" required>
+                <input
+                  value={builder}
+                  onChange={(event) => setBuilder(event.target.value)}
+                  maxLength={80}
+                  required
+                />
+              </Field>
+              <Field
+                label="X handle"
+                hint="Use your public handle so we can show your profile photo."
+                required
+              >
+                <input
+                  value={xHandle}
+                  onChange={(event) => setXHandle(event.target.value)}
+                  maxLength={100}
+                  placeholder="@yourname"
+                  required
+                />
+              </Field>
+            </div>
+            <div className="form-grid">
+              <Field label="Builder role" hint="Founder, studio, or research team" required>
+                <input
+                  value={builderRole}
+                  onChange={(event) => setBuilderRole(event.target.value)}
+                  maxLength={80}
+                  required
+                />
+              </Field>
+              <Field label="Team size" hint="Count the people actively working on it" required>
+                <input
+                  type="number"
+                  min={1}
+                  max={10000}
+                  value={teamSize}
+                  onChange={(event) => setTeamSize(event.target.value)}
+                  required
+                />
+              </Field>
+            </div>
+            <div className="form-grid">
+              <Field label="Based in" hint="City, country, or remote" required>
+                <input
+                  value={location}
+                  onChange={(event) => setLocation(event.target.value)}
+                  maxLength={80}
+                  required
+                />
+              </Field>
+              <Field
+                label="Builder introduction"
+                hint="The short version of who you are"
+                count={`${builderBio.length}/280`}
+                required
+              >
+                <textarea
+                  value={builderBio}
+                  onChange={(event) => setBuilderBio(event.target.value)}
+                  maxLength={280}
+                  rows={3}
+                  required
+                />
+              </Field>
+            </div>
+          </FormSection>
 
-          <div className="form-grid">
-            <Field label="Website">
-              <input
-                type="url"
-                value={websiteUrl}
-                onChange={(event) => setWebsiteUrl(event.target.value)}
-                placeholder="https://"
-              />
-            </Field>
-            <Field label="Social link">
-              <input
-                type="url"
-                value={socialUrl}
-                onChange={(event) => setSocialUrl(event.target.value)}
-                placeholder="https://"
-              />
-            </Field>
-          </div>
+          <FormSection
+            title="Links"
+            description="Add the places where curious people can try, read, or follow the work."
+          >
+            <div className="form-grid">
+              <Field label="GitHub">
+                <input
+                  type="url"
+                  value={githubUrl}
+                  onChange={(event) => setGithubUrl(event.target.value)}
+                  placeholder="https://github.com/..."
+                />
+              </Field>
+              <Field label="Live demo">
+                <input
+                  type="url"
+                  value={demoUrl}
+                  onChange={(event) => setDemoUrl(event.target.value)}
+                  placeholder="https://"
+                />
+              </Field>
+            </div>
+            <div className="form-grid">
+              <Field label="Website">
+                <input
+                  type="url"
+                  value={websiteUrl}
+                  onChange={(event) => setWebsiteUrl(event.target.value)}
+                  placeholder="https://"
+                />
+              </Field>
+              <Field label="Social link">
+                <input
+                  type="url"
+                  value={socialUrl}
+                  onChange={(event) => setSocialUrl(event.target.value)}
+                  placeholder="https://"
+                />
+              </Field>
+            </div>
+          </FormSection>
 
-          <div className="form-grid">
-            <UploadField
-              label="Cover image"
-              hint={`Up to ${formatMB(MAX_COVER_BYTES)}`}
-              icon={<ImagePlus className="h-5 w-5" />}
-              file={cover}
-              uploaded={coverUploaded}
-              accept="image/jpeg,image/png,image/webp,image/gif"
-              required
-              onChange={(event) => chooseCover(event.target.files?.[0] ?? null, event.target)}
-            />
-            <UploadField
-              label="Video or PDF"
-              hint={`Optional, up to ${formatMB(MAX_MEDIA_BYTES)}`}
-              icon={<FileUp className="h-5 w-5" />}
-              file={media}
-              uploaded={mediaUploaded}
-              accept="video/*,application/pdf"
-              onChange={(event) => chooseMedia(event.target.files?.[0] ?? null, event.target)}
-            />
-          </div>
+          <FormSection
+            title="Media"
+            description="A strong cover earns the first click. Everything you upload is stored on Shelby."
+          >
+            <div className="form-grid">
+              <UploadField
+                label="Cover image"
+                hint={`JPG, PNG, WEBP, or GIF up to ${formatMB(MAX_COVER_BYTES)}`}
+                icon={<ImagePlus className="h-5 w-5" />}
+                file={cover}
+                uploaded={coverUploaded}
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                required
+                onChange={(event) => chooseCover(event.target.files?.[0] ?? null, event.target)}
+              />
+              <UploadField
+                label="Supporting file"
+                hint={`Video or PDF, up to ${formatMB(MAX_MEDIA_BYTES)}. Optional.`}
+                icon={<FileUp className="h-5 w-5" />}
+                file={media}
+                uploaded={mediaUploaded}
+                accept="video/*,application/pdf"
+                onChange={(event) => chooseMedia(event.target.files?.[0] ?? null, event.target)}
+              />
+            </div>
+          </FormSection>
 
           <button
             type="submit"
@@ -479,23 +484,54 @@ function Submit() {
 function Field({
   label,
   hint,
+  count,
   required = false,
   children,
 }: {
   label: string;
   hint?: string;
+  count?: string;
   required?: boolean;
   children: React.ReactNode;
 }) {
   return (
     <label className="field">
       <span className="field__label">
-        {label}
-        {required && <small>Required</small>}
-        {hint && <small>{hint}</small>}
+        <span>
+          {label}
+          {required && (
+            <sup className="field__required" aria-label="required">
+              *
+            </sup>
+          )}
+        </span>
       </span>
       {children}
+      {(hint || count) && (
+        <span className="field__meta">
+          {hint && <span>{hint}</span>}
+          {count && <span>{count}</span>}
+        </span>
+      )}
     </label>
+  );
+}
+
+function FormSection({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <fieldset className="form-section">
+      <legend>{title}</legend>
+      <p className="form-section__description">{description}</p>
+      <div className="form-section__fields">{children}</div>
+    </fieldset>
   );
 }
 

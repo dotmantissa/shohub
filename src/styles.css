@@ -89,7 +89,13 @@
     background: var(--color-background);
     color: var(--color-foreground);
     font-family:
-      Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      Inter,
+      ui-sans-serif,
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      sans-serif;
     -webkit-font-smoothing: antialiased;
   }
 
@@ -397,6 +403,51 @@
     box-shadow: 0 18px 50px rgb(16 16 16 / 7%);
   }
 
+  .form-required-note {
+    margin: -0.25rem 0 0;
+    color: var(--muted-foreground);
+    font-size: 0.76rem;
+    line-height: 1.5;
+  }
+
+  .form-required-note strong,
+  .field__required {
+    color: var(--primary);
+  }
+
+  .form-section {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 1rem;
+    border: 0;
+    border-top: 1px solid var(--border);
+    margin: 0;
+    padding: 1.25rem 0 0;
+  }
+
+  .form-section legend {
+    padding: 0 0.65rem 0 0;
+    color: var(--foreground);
+    font-size: 0.95rem;
+    font-weight: 800;
+  }
+
+  .form-section__description {
+    max-width: 42rem;
+    margin: -0.45rem 0 0;
+    color: var(--muted-foreground);
+    font-size: 0.78rem;
+    line-height: 1.55;
+  }
+
+  .form-section__fields {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
   .form-grid {
     display: grid;
     gap: 1rem;
@@ -412,9 +463,32 @@
   }
 
   .field__label {
+    display: block;
+  }
+
+  .field__required {
+    margin-left: 0.2rem;
+    font-size: 0.85rem;
+    line-height: 1;
+  }
+
+  .field__meta,
+  .upload-field small {
+    color: var(--muted-foreground);
+    font-size: 0.72rem;
+    font-weight: 500;
+  }
+
+  .field__meta {
     display: flex;
     justify-content: space-between;
-    gap: 1rem;
+    gap: 0.75rem;
+    line-height: 1.45;
+  }
+
+  .field__meta span:last-child {
+    flex: 0 0 auto;
+    font-variant-numeric: tabular-nums;
   }
 
   .field__label small,
@@ -490,7 +564,7 @@
   .upload-field__copy small {
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
+    white-space: normal;
   }
 
   .notice {
