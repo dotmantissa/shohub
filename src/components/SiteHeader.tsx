@@ -4,6 +4,16 @@ import { LogIn, LogOut, Moon, Plus, Sun } from "lucide-react";
 import { usePrivy } from "@privy-io/react-auth";
 import { useEffect, useState } from "react";
 import { projectCountQueryOptions } from "@/lib/queries";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "./ui/alert-dialog";
 import { useTheme } from "./useTheme";
 import { BrandMark } from "./BrandMark";
 
@@ -11,6 +21,7 @@ function AuthButton() {
   const { ready, authenticated, logout, login } = usePrivy();
   const { theme, toggleTheme } = useTheme();
   const [loginRequested, setLoginRequested] = useState(false);
+  const [signOutOpen, setSignOutOpen] = useState(false);
 
   useEffect(() => {
     if (!ready || !loginRequested || authenticated) return;
@@ -47,10 +58,31 @@ function AuthButton() {
           <span>{loginRequested ? "Opening" : "Sign in"}</span>
         </button>
       ) : (
-        <button className="button button--quiet" type="button" onClick={() => void logout()}>
-          <LogOut size={16} />
-          <span>Sign out</span>
-        </button>
+        <>
+          <button
+            className="button button--quiet"
+            type="button"
+            onClick={() => setSignOutOpen(true)}
+          >
+            <LogOut size={16} />
+            <span>Sign out</span>
+          </button>
+          <AlertDialog open={signOutOpen} onOpenChange={setSignOutOpen}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Leave Shohub?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  You will be signed out of your email account. Your published projects will stay
+                  right where you left them.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Keep me here</AlertDialogCancel>
+                <AlertDialogAction onClick={() => void logout()}>Sign out</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </>
       )}
     </div>
   );

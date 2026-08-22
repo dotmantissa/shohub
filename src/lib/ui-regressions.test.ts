@@ -12,11 +12,26 @@ describe("interactive UI regressions", () => {
     );
   });
 
+  it("forces dependency optimization when starting the local app", () => {
+    const packageJson = source("../../package.json");
+
+    expect(packageJson).toContain('"dev": "vite dev --force"');
+  });
+
   it("keeps sign in clickable while Privy initializes", () => {
     const header = source("../components/SiteHeader.tsx");
 
     expect(header).not.toContain("disabled={!ready}");
     expect(header).toContain("setLoginRequested(true)");
+  });
+
+  it("confirms sign out before ending the email session", () => {
+    const header = source("../components/SiteHeader.tsx");
+
+    expect(header).toContain("setSignOutOpen(true)");
+    expect(header).toContain("<AlertDialog open={signOutOpen}");
+    expect(header).toContain("Leave Shohub?");
+    expect(header).toContain("Keep me here");
   });
 
   it("keeps narrow layouts contained and compact", () => {

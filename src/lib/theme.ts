@@ -4,7 +4,8 @@ export const THEME_STORAGE_KEY = "shohub.theme";
 
 export function resolveTheme(storedTheme: string | null, prefersDark: boolean): Theme {
   if (storedTheme === "dark" || storedTheme === "light") return storedTheme;
-  return prefersDark ? "dark" : "light";
+  void prefersDark;
+  return "light";
 }
 
 export function nextTheme(theme: Theme): Theme {

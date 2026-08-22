@@ -7,8 +7,8 @@ describe("theme preferences", () => {
     expect(resolveTheme("dark", false)).toBe("dark");
   });
 
-  it("falls back to the system preference", () => {
-    expect(resolveTheme(null, true)).toBe("dark");
+  it("defaults to light when no preference has been saved", () => {
+    expect(resolveTheme(null, true)).toBe("light");
     expect(resolveTheme(null, false)).toBe("light");
   });
 
