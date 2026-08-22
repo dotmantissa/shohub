@@ -77,7 +77,7 @@ function ProjectDetails() {
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
-      <main className="mx-auto max-w-4xl px-4 pb-24 pt-10 sm:px-6 sm:pt-14">
+      <main className="page-shell max-w-4xl pb-20 pt-8 sm:pb-24 sm:pt-12">
         <Link
           to="/"
           className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
@@ -89,20 +89,20 @@ function ProjectDetails() {
           account={project.owner_wallet_address}
           blobName={project.cover_blob_name}
           alt={project.name}
-          className="aspect-[16/9] w-full rounded-3xl"
+          className="detail-cover aspect-[16/9] w-full"
           showBadge
           onLoadError={handleCoverError}
         />
 
-        <div className="mt-8 flex flex-wrap items-start justify-between gap-4">
-          <div>
+        <div className="project-heading mt-7">
+          <div className="min-w-0">
             <div className="flex items-center gap-2">
               <CategoryChip category={project.category} />
             </div>
-            <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">{project.name}</h1>
+            <h1 className="mt-3 break-words text-3xl font-bold sm:text-4xl">{project.name}</h1>
             <div className="mt-4 flex items-center gap-3">
               <BuilderAvatar handle={project.x_handle} name={project.builder_name} />
-              <p className="text-sm text-muted-foreground">
+              <p className="min-w-0 break-words text-sm text-muted-foreground">
                 by <span className="font-medium text-foreground">{project.builder_name}</span>
                 <a
                   href={xProfileUrl(project.x_handle)}
@@ -115,7 +115,7 @@ function ProjectDetails() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="project-heading__actions">
             <Button type="button" variant="outline" onClick={handleCopyLink}>
               <Copy aria-hidden="true" /> Copy link
             </Button>
@@ -123,7 +123,9 @@ function ProjectDetails() {
           </div>
         </div>
 
-        <p className="mt-6 text-lg leading-relaxed text-foreground">{project.description}</p>
+        <p className="mt-6 break-words text-base leading-7 text-foreground sm:text-lg sm:leading-relaxed">
+          {project.description}
+        </p>
 
         <section className="builder-profile">
           <div className="builder-profile__heading">
@@ -154,7 +156,7 @@ function ProjectDetails() {
           </a>
         </section>
 
-        <div className="mt-6 flex flex-wrap gap-3">
+        <div className="project-links mt-6">
           {project.github_url && (
             <a
               href={project.github_url}
@@ -192,14 +194,14 @@ function ProjectDetails() {
               rel="noreferrer"
               className="button button--quiet"
             >
-              Social link
+              <ExternalLink className="h-4 w-4" /> Social link
             </a>
           )}
         </div>
 
         {project.media_blob_name && project.media_kind && (
           <section className="mt-12">
-            <div className="mb-3 flex items-center justify-between">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
                 Media
               </h2>

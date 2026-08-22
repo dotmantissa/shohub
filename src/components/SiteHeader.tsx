@@ -69,8 +69,14 @@ export function SiteHeader() {
           <span className="project-count">
             {typeof total === "number" ? `${total} live projects` : "A live builder directory"}
           </span>
-          <Link to="/submit" className="button button--primary">
-            <Plus size={16} /> Share a project
+          <Link
+            to="/submit"
+            className="button button--primary header-submit"
+            aria-label="Share a project"
+            title="Share a project"
+          >
+            <Plus size={16} />
+            <span>Share a project</span>
           </Link>
           <AuthButton />
         </div>

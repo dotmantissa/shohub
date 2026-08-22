@@ -78,12 +78,12 @@ function Home() {
     <div className="min-h-screen bg-background">
       <SiteHeader />
 
-      <main className="mx-auto max-w-6xl px-4 pb-24 pt-10 sm:px-6 sm:pt-16">
-        <section className="mb-10 max-w-2xl">
-          <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
+      <main className="page-shell pb-20 pt-9 sm:pb-24 sm:pt-14">
+        <section className="mb-9 max-w-2xl sm:mb-10">
+          <h1 className="page-title font-bold text-foreground">
             Projects built on <span className="text-primary">Shelby</span>.
           </h1>
-          <p className="mt-4 text-lg text-muted-foreground">
+          <p className="mt-4 text-base leading-7 text-muted-foreground sm:text-lg">
             A living shelf of what the Shelby community is building, with the good stuff stored on
             Shelby.
           </p>
@@ -123,13 +123,13 @@ function Home() {
               />
             </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex flex-wrap items-center gap-2">
+            <div className="browse-toolbar">
+              <div className="category-filter" aria-label="Project categories">
                 {(["All", ...CATEGORIES] as const).map((c) => (
                   <button
                     key={c}
                     onClick={() => updateCategory(c as Category | "All")}
-                    className={`rounded-full px-3.5 py-1.5 text-sm font-medium ring-1 transition-colors ${
+                    className={`category-filter__button rounded-full px-3 py-1.5 text-sm font-medium ring-1 transition-colors ${
                       category === c
                         ? "bg-primary text-primary-foreground ring-primary"
                         : "bg-card text-foreground ring-border hover:bg-accent"
@@ -139,7 +139,7 @@ function Home() {
                   </button>
                 ))}
               </div>
-              <div className="flex items-center gap-3">
+              <div className="browse-summary">
                 <p className="text-sm font-medium text-muted-foreground" aria-live="polite">
                   {total} {total === 1 ? "project" : "projects"}
                 </p>
@@ -158,7 +158,7 @@ function Home() {
           {isLoading ? (
             <div className="py-16 text-center text-sm text-muted-foreground">Loading projects</div>
           ) : projects.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-border bg-card px-6 py-16 text-center shadow-sm">
+            <div className="empty-state border border-dashed border-border bg-card px-5 py-12 text-center shadow-sm sm:px-6 sm:py-16">
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
                 <SearchX aria-hidden="true" className="h-6 w-6" />
               </div>
@@ -231,7 +231,7 @@ function Home() {
         </section>
       </main>
 
-      <footer className="border-t border-border/60 py-8 text-center text-xs text-muted-foreground">
+      <footer className="border-t border-border/60 px-4 py-8 text-center text-xs text-muted-foreground">
         Media served from Shelby. No dusty file cabinet required.
       </footer>
     </div>

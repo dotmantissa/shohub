@@ -30,14 +30,14 @@ export function MediaViewer({
   }
 
   return (
-    <div className="relative">
+    <div className="media-viewer">
       {kind === "video" ? (
         <video
           src={url}
           controls
           onLoadedData={() => setReady(true)}
           onError={handleMediaError}
-          className="w-full rounded-2xl bg-black"
+          className="w-full bg-black"
         />
       ) : (
         <iframe
@@ -45,7 +45,7 @@ export function MediaViewer({
           title="Project PDF"
           onLoad={() => setReady(true)}
           onError={handleMediaError}
-          className="h-[70vh] w-full rounded-lg border border-border bg-card"
+          className="h-[70vh] w-full border border-border bg-card"
         />
       )}
       {ready && (

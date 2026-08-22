@@ -245,17 +245,17 @@ function Submit() {
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
-      <main className="mx-auto grid max-w-6xl gap-10 px-4 pb-24 pt-10 sm:px-6 sm:pt-16 lg:grid-cols-[0.8fr_1.2fr]">
+      <main className="page-shell grid gap-8 pb-20 pt-9 sm:gap-10 sm:pb-24 sm:pt-14 lg:grid-cols-[0.8fr_1.2fr]">
         <section className="self-start lg:sticky lg:top-28">
           <p className="eyebrow">Put it on the shelf</p>
-          <h1 className="mt-4 max-w-lg text-4xl font-semibold tracking-tight sm:text-5xl">
+          <h1 className="page-title mt-4 max-w-lg font-semibold">
             Your project deserves a proper introduction.
           </h1>
           <p className="mt-5 max-w-md text-base leading-7 text-muted-foreground">
             Share the thing you have been building, hiding, and occasionally explaining with your
             hands. Shohub keeps the files on Shelby and the details searchable.
           </p>
-          <div className="mt-8 flex items-center gap-3 text-sm text-muted-foreground">
+          <div className="submit-storage-note mt-8 flex items-center gap-3 text-sm text-muted-foreground">
             <ShelbyBadge />
             <span>Media goes straight to Shelby storage.</span>
           </div>
