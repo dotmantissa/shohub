@@ -28,4 +28,15 @@ describe("interactive UI regressions", () => {
     expect(styles).toContain(".header-submit span");
     expect(styles).toContain(".project-heading");
   });
+
+  it("stops the showcase background when reduced motion is requested", () => {
+    const styles = source("../styles.css");
+    const motion = source("../components/ShowcaseMotion.tsx");
+
+    expect(motion).toContain('aria-hidden="true"');
+    expect(motion).toContain('role="presentation"');
+    expect(styles).toContain("@media (prefers-reduced-motion: reduce)");
+    expect(styles).toContain(".showcase-selector");
+    expect(styles).toContain("animation: none !important");
+  });
 });

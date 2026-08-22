@@ -125,6 +125,128 @@
     letter-spacing: 0;
   }
 
+  .hero-showcase {
+    position: relative;
+    display: flex;
+    min-height: 18rem;
+    align-items: flex-start;
+    overflow: hidden;
+    margin-bottom: 2.5rem;
+    border-bottom: 1px solid var(--border);
+    padding: 0.5rem 0 2.25rem;
+  }
+
+  .hero-showcase__copy {
+    position: relative;
+    z-index: 1;
+    width: min(100%, 39rem);
+    padding: 1rem 0.75rem 0 0;
+  }
+
+  .showcase-motion {
+    position: absolute;
+    inset: 0 -9rem 0 25%;
+    color: var(--foreground);
+    opacity: 0.2;
+    pointer-events: none;
+  }
+
+  .showcase-motion svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .showcase-rail {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .showcase-uplink {
+    fill: none;
+    stroke: var(--primary);
+    stroke-dasharray: 0.08 0.05;
+    stroke-linecap: square;
+    stroke-width: 2;
+    vector-effect: non-scaling-stroke;
+    animation: showcase-data-flow 5s linear infinite;
+  }
+
+  .showcase-frame {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: showcase-frame-float 5s ease-in-out infinite;
+  }
+
+  .showcase-frame__body {
+    fill: var(--background);
+    stroke: currentColor;
+    stroke-width: 1.5;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .showcase-frame__media {
+    fill: var(--muted);
+    stroke: currentColor;
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .showcase-frame__line {
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: square;
+    stroke-width: 2;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .showcase-frame__line--short {
+    opacity: 0.55;
+  }
+
+  .showcase-frame__tag {
+    fill: var(--accent);
+    stroke: var(--primary);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .showcase-frame--featured .showcase-frame__body {
+    stroke: var(--primary);
+    stroke-width: 2;
+  }
+
+  .showcase-selector {
+    fill: none;
+    stroke: var(--primary);
+    stroke-width: 2;
+    transform: translate(235px, 7px);
+    vector-effect: non-scaling-stroke;
+    animation: showcase-select 12s ease-in-out infinite;
+  }
+
+  .showcase-packet {
+    fill: var(--primary);
+    stroke: var(--background);
+    stroke-width: 1;
+    transform: translate(92px, 264px);
+    vector-effect: non-scaling-stroke;
+    animation: showcase-packet-run 7s linear infinite;
+  }
+
+  .showcase-packet path {
+    fill: none;
+    stroke: var(--background);
+    stroke-width: 1.5;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .showcase-packet--late {
+    animation-delay: -3.5s;
+  }
+
   .site-header {
     position: sticky;
     top: 0;
@@ -779,6 +901,21 @@
 }
 
 @media (max-width: 639px) {
+  .hero-showcase {
+    min-height: 17rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+  }
+
+  .hero-showcase__copy {
+    padding-right: 0;
+  }
+
+  .showcase-motion {
+    inset: 5.5rem -15rem -1rem -3rem;
+    opacity: 0.14;
+  }
+
   .browse-toolbar {
     align-items: stretch;
     flex-direction: column;
@@ -873,5 +1010,70 @@
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
+  }
+
+  .showcase-frame,
+  .showcase-selector,
+  .showcase-packet,
+  .showcase-uplink {
+    animation: none !important;
+  }
+}
+
+@keyframes showcase-frame-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes showcase-select {
+  0%,
+  24% {
+    transform: translate(235px, 7px);
+  }
+
+  30%,
+  56% {
+    transform: translate(443px, 130px);
+  }
+
+  62%,
+  88% {
+    transform: translate(578px, 12px);
+  }
+
+  94%,
+  100% {
+    transform: translate(235px, 7px);
+  }
+}
+
+@keyframes showcase-data-flow {
+  from {
+    stroke-dashoffset: 0;
+  }
+
+  to {
+    stroke-dashoffset: -1;
+  }
+}
+
+@keyframes showcase-packet-run {
+  0% {
+    transform: translate(92px, 264px);
+  }
+
+  45% {
+    transform: translate(455px, 264px);
+  }
+
+  90%,
+  100% {
+    transform: translate(815px, 264px);
   }
 }

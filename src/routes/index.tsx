@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Search, SearchX } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { ProjectCard } from "@/components/ProjectCard";
+import { ShowcaseMotion } from "@/components/ShowcaseMotion";
 import { Button } from "@/components/ui/button";
 import {
   CATEGORIES,
@@ -79,17 +80,20 @@ function Home() {
       <SiteHeader />
 
       <main className="page-shell pb-20 pt-9 sm:pb-24 sm:pt-14">
-        <section className="mb-9 max-w-2xl sm:mb-10">
-          <h1 className="page-title font-bold text-foreground">
-            Projects built on <span className="text-primary">Shelby</span>.
-          </h1>
-          <p className="mt-4 text-base leading-7 text-muted-foreground sm:text-lg">
-            A living shelf of what the Shelby community is building, with the good stuff stored on
-            Shelby.
-          </p>
-          <p className="mt-2 text-sm font-medium text-muted-foreground">
-            {total} {total === 1 ? "project" : "projects"} and counting.
-          </p>
+        <section className="hero-showcase">
+          <ShowcaseMotion />
+          <div className="hero-showcase__copy">
+            <h1 className="page-title font-bold text-foreground">
+              Projects built on <span className="text-primary">Shelby</span>.
+            </h1>
+            <p className="mt-4 text-base leading-7 text-muted-foreground sm:text-lg">
+              A living shelf of what the Shelby community is building, with the good stuff stored on
+              Shelby.
+            </p>
+            <p className="mt-2 text-sm font-medium text-muted-foreground">
+              {total} {total === 1 ? "project" : "projects"} and counting.
+            </p>
+          </div>
         </section>
 
         {newest.length > 0 && (
