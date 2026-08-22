@@ -105,11 +105,11 @@ importers:
         specifier: ^0.1.16
         version: 0.1.16(@wallet-standard/core@1.1.2)(bufferutil@4.1.0)(got@11.8.6)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@5.9.3)(utf-8-validate@6.0.6)(viem@2.55.19(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@3.25.76))(zod@3.25.76)
       '@shelby-protocol/react':
-        specifier: ^4.1.0
-        version: 4.2.0(@aptos-labs/ts-sdk@5.2.1(got@11.8.6))(@shelby-protocol/sdk@0.8.0(@aptos-labs/ts-sdk@5.2.1(got@11.8.6)))(@tanstack/react-query@5.101.4(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@5.9.3)
+        specifier: 4.1.0
+        version: 4.1.0(@aptos-labs/ts-sdk@5.2.1(got@11.8.6))(@shelby-protocol/sdk@0.7.1(@aptos-labs/ts-sdk@5.2.1(got@11.8.6)))(@tanstack/react-query@5.101.4(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@5.9.3)
       '@shelby-protocol/sdk':
-        specifier: 0.8.0
-        version: 0.8.0(@aptos-labs/ts-sdk@5.2.1(got@11.8.6))
+        specifier: 0.7.1
+        version: 0.7.1(@aptos-labs/ts-sdk@5.2.1(got@11.8.6))
       '@tailwindcss/vite':
         specifier: ^4.2.1
         version: 4.3.3(vite@8.2.2(@types/node@22.20.1)(esbuild@0.28.2)(jiti@2.7.0))
@@ -2200,8 +2200,8 @@ packages:
       viem:
         optional: true
 
-  '@shelby-protocol/react@4.2.0':
-    resolution: {integrity: sha512-a4Dw18heXU31HHSjGFjTlMSiM/P5tNGmpc7XGexyNDx8OzP5WZ3/gd9p7Ft+Vgt2cQCueQs6kp/lYc0NybGYVA==}
+  '@shelby-protocol/react@4.1.0':
+    resolution: {integrity: sha512-3lS4EeDpSpMwwBabkNnzO29gBe/WIovSZ48s69Q1G1qRRVro+vrtl97/TclFahJNK7UjofEM6JuNuNUFlfq4LA==}
     peerDependencies:
       '@aptos-labs/ts-sdk': ^5.2.1 || ^6.0.0
       '@aptos-labs/wallet-adapter-react': ^6.0.0 || ^7.0.0
@@ -2216,6 +2216,11 @@ packages:
 
   '@shelby-protocol/reed-solomon@0.0.1':
     resolution: {integrity: sha512-Li+7Uj2LLe247YppsZDbZdnyhxGAmTBOx14QPvLNJzeq1lCmjeV7X2BtRzlvyElsvymQQI/WWcKIHu21ysCR9g==}
+
+  '@shelby-protocol/sdk@0.7.1':
+    resolution: {integrity: sha512-PByOfYP8iFxDPq3XMGFCk3j5WmZ8amjAbvatmx+NW1fhSbPZ9t+IhmtsdcCxrkgAaOjXg/3LRxxqXfulTXcHuw==}
+    peerDependencies:
+      '@aptos-labs/ts-sdk': ^5.2.1 || ^6.0.0
 
   '@shelby-protocol/sdk@0.8.0':
     resolution: {integrity: sha512-iqxXv463HohqPccsZJ8912LB4PqeDWy1GUA8DlGXfF8/3ccIPuLUyIHO433excBmU/TE3DeM/v0UWiodKMPYBA==}
@@ -8546,10 +8551,10 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@shelby-protocol/react@4.2.0(@aptos-labs/ts-sdk@5.2.1(got@11.8.6))(@shelby-protocol/sdk@0.8.0(@aptos-labs/ts-sdk@5.2.1(got@11.8.6)))(@tanstack/react-query@5.101.4(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@5.9.3)':
+  '@shelby-protocol/react@4.1.0(@aptos-labs/ts-sdk@5.2.1(got@11.8.6))(@shelby-protocol/sdk@0.7.1(@aptos-labs/ts-sdk@5.2.1(got@11.8.6)))(@tanstack/react-query@5.101.4(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@5.9.3)':
     dependencies:
       '@aptos-labs/ts-sdk': 5.2.1(got@11.8.6)
-      '@shelby-protocol/sdk': 0.8.0(@aptos-labs/ts-sdk@5.2.1(got@11.8.6))
+      '@shelby-protocol/sdk': 0.7.1(@aptos-labs/ts-sdk@5.2.1(got@11.8.6))
       '@tanstack/react-query': 5.101.4(react@19.2.8)
       p-limit: 7.3.1
       react: 19.2.8
@@ -8557,6 +8562,18 @@ snapshots:
       typescript: 5.9.3
 
   '@shelby-protocol/reed-solomon@0.0.1': {}
+
+  '@shelby-protocol/sdk@0.7.1(@aptos-labs/ts-sdk@5.2.1(got@11.8.6))':
+    dependencies:
+      '@aptos-labs/ts-sdk': 5.2.1(got@11.8.6)
+      '@bufbuild/protobuf': 2.14.0
+      '@shelby-protocol/clay-codes': 0.0.3
+      '@shelby-protocol/reed-solomon': 0.0.1
+      graphql: 16.14.2
+      graphql-request: 7.4.0(graphql@16.14.2)
+      graphql-tag: 2.12.7(graphql@16.14.2)
+      p-limit: 7.1.1
+      zod: 3.25.76
 
   '@shelby-protocol/sdk@0.8.0(@aptos-labs/ts-sdk@5.2.1(got@11.8.6))':
     dependencies:

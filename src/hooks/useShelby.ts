@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createWalletClient, custom, defineChain } from "viem";
 import { SHELBY_CHAIN_ID, SHELBY_RPC_URL } from "@/lib/config";
 import { createShelbyClient } from "@/lib/shelby";
+import { blobExpirationMicros } from "@/lib/shelby-upload";
 
 export function useShelbyStorage() {
   const { wallets } = useWallets();
@@ -40,7 +41,8 @@ export function useShelbyStorage() {
   }, [embeddedWallet]);
 
   const client = useMemo(() => createShelbyClient(SHELBY_CHAIN_ID), []);
-  const storage = useStorageAccount({ client, wallet: walletAdapter });
+  const ethereumKitClient = client as unknown as Parameters<typeof useStorageAccount>[0]["client"];
+  const storage = useStorageAccount({ client: ethereumKitClient, wallet: walletAdapter });
   const uploadBlobs = useUploadBlobs({ client });
 
   const upload = async (file: File, blobName: string) => {
@@ -54,6 +56,7 @@ export function useShelbyStorage() {
         signAndSubmitTransaction: storage.signAndSubmitTransaction,
       },
       blobs: [{ blobData: data, blobName }],
+      expirationMicros: blobExpirationMicros(),
     });
     return blobName;
   };
