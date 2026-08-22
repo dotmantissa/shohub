@@ -100,6 +100,11 @@
     -webkit-font-smoothing: antialiased;
   }
 
+  body,
+  #root {
+    min-height: 100vh;
+  }
+
   button,
   input,
   select,
@@ -149,6 +154,33 @@
     color: var(--foreground);
     opacity: 0.2;
     pointer-events: none;
+  }
+
+  .showcase-motion--global {
+    position: fixed;
+    z-index: 0;
+    inset: 4.25rem 0 0;
+    overflow: hidden;
+    color: var(--foreground);
+    opacity: 0.055;
+    contain: strict;
+  }
+
+  .showcase-motion--global svg {
+    width: 100%;
+    height: 100%;
+    min-width: 58rem;
+    transform: translateX(8%);
+  }
+
+  .app-content {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+  }
+
+  .app-content > .min-h-screen {
+    background-color: transparent;
   }
 
   .showcase-motion svg {
@@ -914,6 +946,16 @@
   .showcase-motion {
     inset: 5.5rem -15rem -1rem -3rem;
     opacity: 0.14;
+  }
+
+  .showcase-motion--global {
+    inset: 3.8rem 0 0;
+    opacity: 0.045;
+  }
+
+  .showcase-motion--global svg {
+    min-width: 48rem;
+    transform: translateX(-20%);
   }
 
   .browse-toolbar {

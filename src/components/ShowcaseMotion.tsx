@@ -29,38 +29,51 @@ function ProjectFrame({
   );
 }
 
-export function ShowcaseMotion() {
+function ShowcaseChain({ y = 0 }: { y?: number }) {
   return (
-    <div className="showcase-motion" aria-hidden="true">
-      <svg viewBox="0 0 920 300" role="presentation" preserveAspectRatio="xMidYMid slice">
-        <path className="showcase-rail" d="M40 112H880" />
-        <path className="showcase-rail" d="M40 238H880" />
-        <path className="showcase-uplink" pathLength="1" d="M92 238V270H828V238" />
+    <g transform={`translate(0 ${y})`}>
+      <path className="showcase-rail" d="M40 112H880" />
+      <path className="showcase-rail" d="M40 238H880" />
+      <path className="showcase-uplink" pathLength="1" d="M92 238V270H828V238" />
 
-        <ProjectFrame x={80} y={25} width={132} delay="-1.8s" />
-        <ProjectFrame x={244} y={15} width={154} featured delay="-3.4s" />
-        <ProjectFrame x={430} y={31} width={126} delay="-0.6s" />
-        <ProjectFrame x={588} y={20} width={146} delay="-2.5s" />
-        <ProjectFrame x={766} y={35} width={94} delay="-4.2s" />
+      <ProjectFrame x={80} y={25} width={132} delay="-1.8s" />
+      <ProjectFrame x={244} y={15} width={154} featured delay="-3.4s" />
+      <ProjectFrame x={430} y={31} width={126} delay="-0.6s" />
+      <ProjectFrame x={588} y={20} width={146} delay="-2.5s" />
+      <ProjectFrame x={766} y={35} width={94} delay="-4.2s" />
 
-        <ProjectFrame x={130} y={143} width={142} delay="-2.9s" />
-        <ProjectFrame x={306} y={154} width={112} delay="-0.9s" />
-        <ProjectFrame x={452} y={138} width={156} featured delay="-3.8s" />
-        <ProjectFrame x={642} y={151} width={128} delay="-1.4s" />
+      <ProjectFrame x={130} y={143} width={142} delay="-2.9s" />
+      <ProjectFrame x={306} y={154} width={112} delay="-0.9s" />
+      <ProjectFrame x={452} y={138} width={156} featured delay="-3.8s" />
+      <ProjectFrame x={642} y={151} width={128} delay="-1.4s" />
 
-        <g className="showcase-selector">
-          <rect width="170" height="98" rx="7" />
-          <path d="M12 0V-10M158 0V-10M12 98V108M158 98V108" />
-        </g>
+      <g className="showcase-selector">
+        <rect width="170" height="98" rx="7" />
+        <path d="M12 0V-10M158 0V-10M12 98V108M158 98V108" />
+      </g>
 
-        <g className="showcase-packet">
-          <rect width="13" height="13" rx="2" />
-          <path d="M4 6.5H9" />
-        </g>
-        <g className="showcase-packet showcase-packet--late">
-          <rect width="13" height="13" rx="2" />
-          <path d="M4 6.5H9" />
-        </g>
+      <g className="showcase-packet">
+        <rect width="13" height="13" rx="2" />
+        <path d="M4 6.5H9" />
+      </g>
+      <g className="showcase-packet showcase-packet--late">
+        <rect width="13" height="13" rx="2" />
+        <path d="M4 6.5H9" />
+      </g>
+    </g>
+  );
+}
+
+export function ShowcaseMotion({ global = false }: { global?: boolean }) {
+  return (
+    <div
+      className={`showcase-motion ${global ? "showcase-motion--global" : ""}`}
+      aria-hidden="true"
+    >
+      <svg viewBox="0 0 920 900" role="presentation" preserveAspectRatio="xMidYMid slice">
+        <ShowcaseChain />
+        <ShowcaseChain y={300} />
+        <ShowcaseChain y={600} />
       </svg>
     </div>
   );

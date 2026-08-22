@@ -39,4 +39,18 @@ describe("interactive UI regressions", () => {
     expect(styles).toContain(".showcase-selector");
     expect(styles).toContain("animation: none !important");
   });
+
+  it("keeps the showcase background global and layered behind page content", () => {
+    const root = source("../routes/__root.tsx");
+    const motion = source("../components/ShowcaseMotion.tsx");
+    const styles = source("../styles.css");
+
+    expect(root).toContain("<ShowcaseMotion global />");
+    expect(root).toContain('className="app-content"');
+    expect(motion).toContain("showcase-motion--global");
+    expect(motion).toContain("<ShowcaseChain y={300} />");
+    expect(motion).toContain("<ShowcaseChain y={600} />");
+    expect(styles).toContain(".showcase-motion--global");
+    expect(styles).toContain(".app-content");
+  });
 });

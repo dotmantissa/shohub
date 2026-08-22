@@ -4,7 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import { Search, SearchX } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { ProjectCard } from "@/components/ProjectCard";
-import { ShowcaseMotion } from "@/components/ShowcaseMotion";
 import { Button } from "@/components/ui/button";
 import {
   CATEGORIES,
@@ -81,7 +80,6 @@ function Home() {
 
       <main className="page-shell pb-20 pt-9 sm:pb-24 sm:pt-14">
         <section className="hero-showcase">
-          <ShowcaseMotion />
           <div className="hero-showcase__copy">
             <h1 className="page-title font-bold text-foreground">
               Projects built on <span className="text-primary">Shelby</span>.

@@ -12,6 +12,7 @@ import { Toaster } from "sonner";
 
 import appCss from "../styles.css?url";
 import { AppProviders } from "@/components/AppProviders";
+import { ShowcaseMotion } from "@/components/ShowcaseMotion";
 
 function NotFoundComponent() {
   return (
@@ -124,7 +125,10 @@ function RootComponent() {
 
   return (
     <AppProviders queryClient={queryClient}>
-      <Outlet />
+      <ShowcaseMotion global />
+      <div className="app-content">
+        <Outlet />
+      </div>
       <Toaster position="top-center" richColors />
     </AppProviders>
   );
