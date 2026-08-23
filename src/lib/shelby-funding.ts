@@ -5,8 +5,11 @@ import {
   type EthereumAddress,
 } from "@aptos-labs/derived-wallet-ethereum";
 
-export const APT_TARGET_OCTAS = 10_000_000;
-export const APT_REFILL_THRESHOLD_OCTAS = 2_000_000;
+export const APT_TARGET_OCTAS = 100_000_000;
+export const APT_REFILL_THRESHOLD_OCTAS = 40_000_000;
+export const APT_DEFAULT_MAX_GAS_AMOUNT = 200_000;
+export const APT_TARGET_FEE_CEILINGS = 5;
+export const APT_REFILL_FEE_CEILINGS = 2;
 export const DEPLOYER_RESERVE_OCTAS = 500_000_000;
 export const SHELBY_USD_TARGET = 10_000_000;
 export const SHELBY_USD_REFILL_THRESHOLD = 2_000_000;
@@ -58,6 +61,24 @@ export function deriveShelbyAddress(ethereumAddress: string, domain: string) {
     authenticationFunction: defaultEthereumAuthenticationFunction,
   });
   return publicKey.authKey().derivedAddress().toString();
+}
+
+export function aptFundingLevels(gasUnitPrice: number) {
+  if (!Number.isSafeInteger(gasUnitPrice) || gasUnitPrice <= 0) {
+    throw new Error("The gas unit price is invalid.");
+  }
+  const transactionFeeCeiling = APT_DEFAULT_MAX_GAS_AMOUNT * gasUnitPrice;
+  if (!Number.isSafeInteger(transactionFeeCeiling)) {
+    throw new Error("The transaction fee ceiling is invalid.");
+  }
+  return {
+    transactionFeeCeiling,
+    target: Math.max(APT_TARGET_OCTAS, transactionFeeCeiling * APT_TARGET_FEE_CEILINGS),
+    refillThreshold: Math.max(
+      APT_REFILL_THRESHOLD_OCTAS,
+      transactionFeeCeiling * APT_REFILL_FEE_CEILINGS,
+    ),
+  };
 }
 
 export function fundingTopUp(balance: number, target: number, refillThreshold: number) {

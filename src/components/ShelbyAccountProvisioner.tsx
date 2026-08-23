@@ -1,7 +1,7 @@
 import { usePrivy } from "@privy-io/react-auth";
 import { useEffect, useRef, useState } from "react";
 import { useShelbyStorage } from "@/hooks/useShelby";
-import { provisionShelbyAccount } from "@/lib/server";
+import { ensureShelbyAccountProvisioned } from "@/lib/shelby-provisioning";
 
 const MAX_ATTEMPTS = 4;
 
@@ -27,12 +27,10 @@ export function ShelbyAccountProvisioner() {
     void getAccessToken()
       .then(async (accessToken) => {
         if (!accessToken) throw new Error("Your email session expired.");
-        await provisionShelbyAccount({
-          data: {
-            accessToken,
-            storageAccountAddress: storage.storageAccountAddress!,
-            domain: window.location.host,
-          },
+        await ensureShelbyAccountProvisioned({
+          accessToken,
+          storageAccountAddress: storage.storageAccountAddress!,
+          domain: window.location.host,
         });
       })
       .catch((error) => {

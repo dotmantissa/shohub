@@ -9,12 +9,11 @@ import {
 import { SHELBYUSD_FA_METADATA_ADDRESS, ShelbyNodeClient } from "@shelby-protocol/sdk/node";
 import { getDatabase } from "./neon.server";
 import {
-  APT_REFILL_THRESHOLD_OCTAS,
-  APT_TARGET_OCTAS,
   DEPLOYER_RESERVE_OCTAS,
   SHELBY_USD_REFILL_THRESHOLD,
   SHELBY_USD_TARGET,
   allowedShelbyDomains,
+  aptFundingLevels,
   assertAllowedShelbyDomain,
   assertSponsorReserve,
   deriveShelbyAddress,
@@ -123,6 +122,9 @@ async function transferApt(address: string, amount: number) {
     sender: deployer.accountAddress,
     recipient: AccountAddress.from(address),
     amount,
+    options: {
+      replayProtectionNonce: crypto.getRandomValues(new Uint32Array(1))[0],
+    },
   });
   const pending = await aptos.signAndSubmitTransaction({ signer: deployer, transaction });
   await aptos.waitForTransaction({
@@ -132,32 +134,43 @@ async function transferApt(address: string, amount: number) {
 }
 
 async function fundAccount(address: string): Promise<FundingResult> {
-  let aptBalance = await getAptBalance(address);
-  let shelbyUsdBalance = await getShelbyUsdBalance(address);
-  let funded = false;
-
-  const aptAmount = fundingTopUp(aptBalance, APT_TARGET_OCTAS, APT_REFILL_THRESHOLD_OCTAS);
-  if (aptAmount > 0) {
-    await transferApt(address, aptAmount);
-    aptBalance = await getAptBalance(address);
-    funded = true;
-  }
-
+  const aptos = getAptosClient();
+  const [initialAptBalance, initialShelbyUsdBalance, gasPrice] = await Promise.all([
+    getAptBalance(address),
+    getShelbyUsdBalance(address),
+    aptos.getGasPriceEstimation(),
+  ]);
+  const aptLevels = aptFundingLevels(
+    Math.max(gasPrice.gas_estimate, gasPrice.prioritized_gas_estimate ?? 0),
+  );
+  const aptAmount = fundingTopUp(initialAptBalance, aptLevels.target, aptLevels.refillThreshold);
   const shelbyUsdAmount = fundingTopUp(
-    shelbyUsdBalance,
+    initialShelbyUsdBalance,
     SHELBY_USD_TARGET,
     SHELBY_USD_REFILL_THRESHOLD,
   );
-  if (shelbyUsdAmount > 0) {
-    await getShelbyClient().fundAccountWithShelbyUSD({
-      address,
-      amount: shelbyUsdAmount,
-    });
-    shelbyUsdBalance = await getShelbyUsdBalance(address);
-    funded = true;
+
+  const [aptBalance, shelbyUsdBalance] = await Promise.all([
+    aptAmount > 0
+      ? transferApt(address, aptAmount).then(() => getAptBalance(address))
+      : initialAptBalance,
+    shelbyUsdAmount > 0
+      ? getShelbyClient()
+          .fundAccountWithShelbyUSD({ address, amount: shelbyUsdAmount })
+          .then(() => getShelbyUsdBalance(address))
+      : initialShelbyUsdBalance,
+  ]);
+
+  if (aptBalance < aptLevels.transactionFeeCeiling) {
+    throw new Error("The Shelby account does not have enough APT for transaction fees.");
   }
 
-  return { address, aptBalance, shelbyUsdBalance, funded };
+  return {
+    address,
+    aptBalance,
+    shelbyUsdBalance,
+    funded: aptAmount > 0 || shelbyUsdAmount > 0,
+  };
 }
 
 async function fundAccountOnce(address: string) {

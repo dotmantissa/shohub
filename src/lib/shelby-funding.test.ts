@@ -3,6 +3,7 @@ import {
   APT_REFILL_THRESHOLD_OCTAS,
   APT_TARGET_OCTAS,
   allowedShelbyDomains,
+  aptFundingLevels,
   assertAllowedShelbyDomain,
   assertSponsorReserve,
   deriveShelbyAddress,
@@ -52,6 +53,24 @@ describe("Shelby account funding", () => {
     expect(
       fundingTopUp(APT_REFILL_THRESHOLD_OCTAS - 1, APT_TARGET_OCTAS, APT_REFILL_THRESHOLD_OCTAS),
     ).toBe(APT_TARGET_OCTAS - APT_REFILL_THRESHOLD_OCTAS + 1);
+  });
+
+  it("keeps enough APT for the SDK fee ceiling and a multi-transaction publish", () => {
+    expect(aptFundingLevels(100)).toEqual({
+      transactionFeeCeiling: 20_000_000,
+      target: 100_000_000,
+      refillThreshold: 40_000_000,
+    });
+    expect(aptFundingLevels(500)).toEqual({
+      transactionFeeCeiling: 100_000_000,
+      target: 500_000_000,
+      refillThreshold: 200_000_000,
+    });
+  });
+
+  it("rejects invalid gas prices", () => {
+    expect(() => aptFundingLevels(0)).toThrow("gas unit price is invalid");
+    expect(() => aptFundingLevels(Number.NaN)).toThrow("gas unit price is invalid");
   });
 
   it("keeps the sponsor reserve untouched", () => {
